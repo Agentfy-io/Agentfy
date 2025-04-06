@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 
 from common.utils.logging import get_logger
-from common.ai.chatgpt import ChatGPT
+from common.ais.chatgpt import ChatGPT
 from config import settings
 from common.exceptions.exceptions import AnalysisError, ChatGPTAPIError
 from common.models.workflows import WorkflowDefinition, MissingParameter, WorkflowStep, Parameter

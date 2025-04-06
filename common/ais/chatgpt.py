@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@file: agentfy/common/ai/chatgpt.py
+@file: agentfy/common/ais/chatgpt.py
 @desc: OpenAI API client wrapper for chat and image generation
 @auth: Callmeiks
 """
