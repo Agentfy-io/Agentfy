@@ -1,0 +1,5 @@
+pydantic==2.11.2
+aiohttp==3.11.16
+dotenv==0.9.9
+openai==1.70.0
+anthropic==0.49.0
