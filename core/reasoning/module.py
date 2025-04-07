@@ -13,7 +13,7 @@ from common.utils.logging import get_logger
 from common.ais.chatgpt import ChatGPT
 from config import settings
 from common.exceptions.exceptions import AnalysisError, ChatGPTAPIError
-from common.models.workflows import WorkflowDefinition, MissingParameter, WorkflowStep, Parameter
+from common.models.workflows import WorkflowDefinition, MissingParameter,  ParameterConflict, WorkflowStep, Parameter, ParameterValidationResult
 
 logger = get_logger(__name__)
 
@@ -33,7 +33,7 @@ class ReasoningModule:
                                                  user_request: str,
                                                  agent_registry: Dict[str, Any],
                                                  chat_history: List[Dict[str, Any]] = None,
-                                                 existing_workflow: Dict[str, Any] = None) -> Tuple[WorkflowDefinition, List[MissingParameter]]:
+                                                 existing_workflow: Dict[str, Any] = None) -> Tuple[WorkflowDefinition, ParameterValidationResult]:
         """
         Analyze user request and build workflow using ChatGPT.
         Handles both new requests and parameter updates for existing workflows.
@@ -73,8 +73,16 @@ class ReasoningModule:
             # Convert to proper model objects
             workflow = self._convert_to_workflow_definition(workflow_data)
             missing_parameters = self._extract_missing_parameters(workflow_data)
+            parameter_conflicts = self._extract_parameter_conflicts(workflow_data)
 
-            return workflow, missing_parameters
+            # Create parameter validation result
+            parameter_validation_result = ParameterValidationResult(
+                is_valid=False if missing_parameters or parameter_conflicts else True,
+                missing_required_parameters=missing_parameters,
+                parameter_conflicts=parameter_conflicts
+            )
+
+            return workflow, parameter_validation_result
 
         except Exception as e:
             logger.error(f"Error analyzing request: {str(e)}")
@@ -143,6 +151,7 @@ class ReasoningModule:
         2. Identify the appropriate agents and functions needed to fulfill the request
         3. Create a workflow with the necessary steps in the correct order
         4. Identify any missing parameters needed only for the first step of the workflow
+        5. If there are any parameter conflicts, include them in the parameter_conflicts array
 
         Return ONLY a JSON object with the following structure:
         {{
@@ -171,10 +180,27 @@ class ReasoningModule:
                     "step_id": "step1"  // Indicate which step needs this parameter
                 }}
             ]
+            "parameter_conflicts": [
+                {{
+                    "parameter1": "param1",
+                    "function_id": "function-id",
+                    "step_id": "step1",
+                    "reason": "Conflict reason",
+                    "resolution": "Resolution suggestion"  // Optional
+                }},
+                {{
+                    "parameter2": "param2",
+                    "function_id": "function-id",
+                    "step_id": "step1",
+                    "reason": "Conflict reason",
+                    "resolution": "Resolution suggestion"  // Optional
+                }}
+            ]
         }}
 
         The workflow should be as efficient as possible, using only the necessary steps to complete the user's request.
         If there are parameters missing that would be needed from the user, include them in the missing_parameters array.
+        If there are any parameter conflicts, include them in the parameter_conflicts array with a reason and resolution suggestion.
         """
 
     def _create_parameter_update_system_message(self, agent_registry: Dict[str, Any]) -> str:
@@ -211,15 +237,39 @@ class ReasoningModule:
                     "description": "Parameter description",
                     "type": "string/number/boolean",
                     "required": true/false,
-                    "function_id": "function-id",  // Indicate which function needs this parameter
-                    "step_id": "step1"  // Should only be step1
+                    "function_id": "function-id", 
+                    "step_id": "step1"  
+                }},
+                {{
+                    "name": "another-parameter-name",
+                    "description": "Another parameter description",
+                    "type": "string/number/boolean",
+                    "required": true/false,
+                    "function_id": "function-id", 
+                    "step_id": "step1"  
+                }}
+            ]
+            "parameter_conflicts": [
+                {{
+                    "parameter1": "param1",
+                    "function_id": "function-id",
+                    "step_id": "step1",
+                    "reason": "Conflict reason",
+                    "resolution": "Resolution suggestion"  // Optional
+                }},
+                {{
+                    "parameter2": "param2",
+                    "function_id": "function-id",
+                    "step_id": "step1",
+                    "reason": "Conflict reason",
+                    "resolution": "Resolution suggestion"  // Optional
                 }}
             ]
         }}
 
         FOCUS ONLY ON STEP 1 of the workflow. If all required parameters for step 1 have been provided, 
-        the missing_parameters array should be empty. If a parameter value provided by the user is invalid, 
-        keep it in the missing_parameters array and explain why it's invalid in the description.
+        the missing_parameters array should be empty. If a parameter value provided by the user is still invalid, 
+        put in the parameter_conflicts array with a reason and resolution suggestion.
         """
 
     def _create_user_message(self, user_request: str, chat_history: List[Dict[str, Any]] = None) -> str:
@@ -270,7 +320,6 @@ class ReasoningModule:
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
             steps=steps,
-            input_parameters=[],  # These would be populated separately
             output_format="json"
         )
 
@@ -292,3 +341,19 @@ class ReasoningModule:
             missing_params.append(missing_param)
 
         return missing_params
+
+    def _extract_parameter_conflicts(self, workflow_data):
+        """Extract parameter conflicts from workflow data."""
+        conflicts = []
+
+        for conflict_data in workflow_data.get("parameter_conflicts", []):
+            conflict = ParameterConflict(
+                parameter=conflict_data.get("parameter1", ""),
+                function_id=conflict_data.get("function_id", ""),
+                step_id=conflict_data.get("step_id", "step1"),
+                reason=conflict_data.get("reason", ""),
+                resolution=conflict_data.get("resolution", None)
+            )
+            conflicts.append(conflict)
+
+        return conflicts
