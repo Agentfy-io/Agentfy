@@ -41,28 +41,28 @@ Agentfy is a modular microservices architecture designed to process user request
 
 ```
 Agentfy/
-├── core/                       # Core system components
+├── core/                    # Core system components
 │   ├── perception/             # Input validation & output formatting
 │   ├── memory/                 # Data persistence & retrieval
 │   ├── reasoning/              # Request analysis & workflow planning
 │   ├── action/                 # Workflow execution
 │   ├── monitoring/             # Execution monitoring (optional)
 │   └── communication/          # Inter-agent communication (optional)
-├── common/                     # Shared utilities 
+├── common/                  # Shared utilities 
 │   ├── ais/                    # ai utilities, e.g., wrapper class for ChatGPT, Claude, DeepSeek
 │   ├── models/                 # models for data structures, design for communication between modules, e.g., messages, workflows, users
 │   ├── security/               # Security utilities
 │   ├── utils/                  # Common utilities  
 │   └── exceptions/             # Custom exceptions
-├── agents/                     # Platform-specific agents
+├── agents/                  # Platform-specific agents
 │   ├── tiktok/                 # TikTok agents
 │   ├── twitter/                # Twitter agents
 │   └── ...                     # Other platform agents
-├── config.py                   # Configuration management 
-├── agents_registry.json        # Agent registry for available agents and functions
-├── requirements.txt            # Python dependencies
-├── README.md                   # Documentation
-└── main.py                     # Main entry point for Agentfy, for testing and development
+├── config.py                # Configuration management 
+├── agents_registry.json     # Agent registry for available agents and functions
+├── requirements.txt         # Python dependencies
+├── README.md                # Documentation
+└── main.py                  # Main entry point for Agentfy, for testing and development
 ```
 
 ## 🧩 Core Modules
