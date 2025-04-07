@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 @file: agentfy/common/models/workflows.py
-@desc: workflow models, including workflow definition, execution result, and step metrics (for reasoning, action, and monitoring modules).
+@desc: workflow models, including workflow definition, execution result, and step metrics (for reasoning, action modules).
 @auth: Callmeiks
 """
 from typing import Any, Dict, List, Optional, Union, Literal
@@ -20,13 +20,14 @@ class MissingParameter(BaseModel):
     type: str
     description: str
     required: bool
-    function_id: Optional[str] = None
-    step_id: Optional[str] = None
+    function_id: str
+    step_id: str
     suggestions: Optional[List[Any]] = None
 
 class ParameterConflict(BaseModel):
-    parameter1: str
-    parameter2: str
+    parameter: str
+    function_id: str
+    step_id: str
     reason: str
     resolution: Optional[str] = None
 
@@ -55,11 +56,10 @@ class WorkflowDefinition(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     steps: List[WorkflowStep]
-    input_parameters: List[Parameter] = None
     output_format: str = "json"
 
 class ParameterValidationResult(BaseModel):
-    is_valid: bool
+    is_valid: bool # True if all parameters are valid
     missing_required_parameters: List[MissingParameter] = None
     recommended_parameters: List[Parameter] = None
     parameter_conflicts: List[ParameterConflict] = None
