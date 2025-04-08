@@ -29,6 +29,7 @@ class ReasoningModule:
         self.config = settings
         self.chatgpt = ChatGPT()
 
+
     async def analyze_request_and_build_workflow(self,
                                                  user_request: str,
                                                  agent_registry: Dict[str, Any],
@@ -168,7 +169,7 @@ class ReasoningModule:
                         "param1": "value1",
                         "param2": "value2"
                     }}
-                }}
+                }},
             ],
             "missing_parameters": [
                 {{
@@ -342,7 +343,7 @@ class ReasoningModule:
 
         return missing_params
 
-    def _extract_parameter_conflicts(self, workflow_data):
+    def _extract_parameter_conflicts(self, workflow_data)-> List[ParameterConflict]:
         """Extract parameter conflicts from workflow data."""
         conflicts = []
 
