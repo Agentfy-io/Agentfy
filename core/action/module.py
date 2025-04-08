@@ -1,4 +1,9 @@
-# social_media_agent/core/action/module.py
+# -*- coding: utf-8 -*-
+"""
+@file: agentfy/core/action/module.py
+@desc: Simplified Action Module that executes workflows by finding and calling agent functions,
+@auth(s): Callmeiks
+"""
 import importlib
 import inspect
 import asyncio
