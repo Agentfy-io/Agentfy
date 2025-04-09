@@ -27,16 +27,18 @@ class Settings(BaseSettings):
     # External Service API Keys
     openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
     anthropic_api_key: Optional[str] = Field(None, env="ANTHROPIC_API_KEY")
-    tikhub_apikey: Optional[str] = Field(None, env="TIKHUB_API_KEY")
+    tikhub_api_key: Optional[str] = Field(None, env="TIKHUB_API_KEY")
     lemonfox_api_key: Optional[str] = Field(None, env="LEMONFOX_API_KEY")
     elevenlabs_api_key: Optional[str] = Field(None, env="ELEVENLABS_API_KEY")
 
     # social media API keys
     x_api_key: Optional[str] = Field(None, env="X_API_KEY")
     x_api_secret: Optional[str] = Field(None, env="X_API_SECRET")
+    x_access_token: Optional[str] = Field(None, env="X_ACCESS_TOKEN")
+    x_access_token_secret: Optional[str] = Field(None, env="X_ACCESS_TOKEN_SECRET")
 
     # TikHub data source
-    TIKHUB_BASE_URL: str = "https://api.tikhub.io"
+    tikhub_base_url: str = "https://api.tikhub.io"
 
     # Task Queue Settings, if using Celery (uncomment if needed)
     """
@@ -54,7 +56,8 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-        case_sensitive = True
+        case_sensitive = False  # Change to False to handle case differences
+        populate_by_name = True  # Allow populating by field name and alias
 
 
 # Create a global settings object
