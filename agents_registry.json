@@ -1,59 +1,305 @@
 {
   "AGENT_REGISTRY": {
     "x": {
-      "interactive": {
-        "x-post-tweet": {
-          "id": "x-post-tweet",
-          "description": "Post a new tweet to X (x)",
-          "parameters": {
-            "message": {
-              "type": "string",
-              "description": "The text content of the tweet",
+      "crawlers": [
+        {
+          "agent_id": "x_crawler",
+          "function_id": "fetch_search_posts",
+          "description": "Search tweets based on keywords",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search keyword or phrase",
               "required": true
             },
-            "media_urls": {
-              "type": "string[]",
-              "description": "URLs of media to attach to the tweet",
-              "required": false
+            {
+              "name": "search_type",
+              "type": "str",
+              "description": "Type of search results to return",
+              "required": false,
+              "default": "Top",
+              "enum": ["Top", "Latest", "People", "Media"]
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
             }
-          },
-          "returns": "PostResult"
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of tweets matching the search criteria"
+          }
         },
-        "x-send-dm": {
-          "id": "x-send-dm",
-          "description": "Send a direct message to a user on X (x)",
-          "parameters": {
-            "recipient_id": {
-              "type": "string",
+        {
+          "agent_id": "x_crawler",
+          "function_id": "fetch_user_tweets",
+          "description": "Fetch tweets posted by a specific user",
+          "parameters": [
+            {
+              "name": "screen_name",
+              "type": "str",
+              "description": "Twitter handle without '@'",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of tweets posted by the specified user"
+          }
+        },
+        {
+          "agent_id": "x_crawler",
+          "function_id": "fetch_trending_topics",
+          "description": "Fetch trending topics for a specific country",
+          "parameters": [
+            {
+              "name": "country",
+              "type": "str",
+              "description": "Country name to fetch trends for",
+              "required": false,
+              "default": "UnitedStates"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of trending topics in the specified country"
+          }
+        },
+        {
+          "agent_id": "x_crawler",
+          "function_id": "fetch_user_followers",
+          "description": "Fetch followers of a specific user",
+          "parameters": [
+            {
+              "name": "screen_name",
+              "type": "str",
+              "description": "Twitter handle without '@'",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of users following the specified user"
+          }
+        }
+      ],
+      "analysis": [
+        {
+          "agent_id": "x_analysis",
+          "function_id": "analyze_tweet_engagement",
+          "description": "Analyzes engagement patterns for tweets",
+          "parameters": [
+            {
+              "name": "tweet_data",
+              "type": "List[Dict]",
+              "description": "Collection of tweets to analyze",
+              "required": true
+            },
+            {
+              "name": "metrics",
+              "type": "List[str]",
+              "description": "Engagement metrics to analyze",
+              "required": false,
+              "default": ["likes", "retweets", "replies"]
+            }
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Analysis results of tweet engagement patterns"
+          }
+        }
+      ],
+      "interactive": [
+        {
+          "agent_id": "x_interactive",
+          "function_id": "post_tweet",
+          "description": "Post a new tweet to X (Twitter)",
+          "parameters": [
+            {
+              "name": "message",
+              "type": "str",
+              "description": "The text content of the tweet (max 280 characters)",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Result of posting the tweet including status and tweet ID"
+          }
+        },
+        {
+          "agent_id": "x_interactive",
+          "function_id": "upload_media_and_post",
+          "description": "Upload media and post a tweet with it",
+          "parameters": [
+            {
+              "name": "message",
+              "type": "str",
+              "description": "The text content of the tweet (max 280 characters)",
+              "required": true
+            },
+            {
+              "name": "media_path",
+              "type": "str",
+              "description": "Path to the media file to upload",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Result of posting the tweet with media including status and tweet ID"
+          }
+        },
+        {
+          "agent_id": "x_interactive",
+          "function_id": "delete_tweet",
+          "description": "Delete a tweet with the specified ID",
+          "parameters": [
+            {
+              "name": "tweet_id",
+              "type": "str",
+              "description": "The ID of the tweet to delete",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Result of the tweet deletion operation"
+          }
+        },
+        {
+          "agent_id": "x_interactive",
+          "function_id": "send_direct_message",
+          "description": "Send a direct message to a user on X (Twitter)",
+          "parameters": [
+            {
+              "name": "recipient_id",
+              "type": "str",
               "description": "The user ID of the recipient",
               "required": true
             },
-            "message": {
-              "type": "string",
-              "description": "The text content of the direct message",
+            {
+              "name": "message",
+              "type": "str",
+              "description": "The text content of the direct message (max 280 characters)",
               "required": true
             }
-          },
-          "returns": "MessageResult"
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Result of sending the direct message"
+          }
         },
-        "x-reply-to-tweet": {
-          "id": "x-reply-to-tweet",
-          "description": "Reply to an existing tweet on X (x)",
-          "parameters": {
-            "tweet_id": {
-              "type": "string",
+        {
+          "agent_id": "x_interactive",
+          "function_id": "reply_to_tweet",
+          "description": "Reply to an existing tweet on X (Twitter)",
+          "parameters": [
+            {
+              "name": "tweet_id",
+              "type": "str",
               "description": "The ID of the tweet to reply to",
               "required": true
             },
-            "message": {
-              "type": "string",
-              "description": "The text content of the reply",
+            {
+              "name": "message",
+              "type": "str",
+              "description": "The text content of the reply (max 280 characters)",
               "required": true
             }
-          },
-          "returns": "PostResult"
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Result of posting the reply including status and tweet ID"
+          }
+        },
+        {
+          "agent_id": "x_interactive",
+          "function_id": "follow_user",
+          "description": "Follow a user with the specified ID",
+          "parameters": [
+            {
+              "name": "target_user_id",
+              "type": "str",
+              "description": "The ID of the user to follow",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Result of the follow operation"
+          }
+        },
+        {
+          "agent_id": "x_interactive",
+          "function_id": "like_tweet",
+          "description": "Like a tweet with the specified ID",
+          "parameters": [
+            {
+              "name": "tweet_id",
+              "type": "str",
+              "description": "The ID of the tweet to like",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Result of the like operation"
+          }
+        },
+        {
+          "agent_id": "x_interactive",
+          "function_id": "unlike_tweet",
+          "description": "Unlike a tweet with the specified ID",
+          "parameters": [
+            {
+              "name": "tweet_id",
+              "type": "str",
+              "description": "The ID of the tweet to unlike",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Result of the unlike operation"
+          }
+        },
+        {
+          "agent_id": "x_interactive",
+          "function_id": "retweet",
+          "description": "Retweet a tweet with the specified ID",
+          "parameters": [
+            {
+              "name": "tweet_id",
+              "type": "str",
+              "description": "The ID of the tweet to retweet",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "Dict",
+            "description": "Result of the retweet operation"
+          }
         }
-      }
+      ]
     }
   }
 }
