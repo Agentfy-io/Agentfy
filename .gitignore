@@ -1,3 +1,8 @@
 /.idea/inspectionProfiles
 /.idea
 /.idea
+/__pycache__
+/common/exceptions/__pycache__
+/common/ais/__pycache__
+/common/utils/__pycache__
+/common/__pycache__
