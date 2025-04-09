@@ -144,6 +144,48 @@ class XCrawler:
 
         return all_tweets
 
+    def fetch_tweets_comments(self, tweet_id: str, cursor: Optional[str] = None,
+                              max_pages: int = 1) -> List[Dict]:
+        """
+        Fetch comments for a specific tweet.
+
+        Args:
+            tweet_id: ID of the tweet to fetch comments for
+            cursor: Pagination cursor
+            max_pages: Maximum number of pages to fetch
+
+        Returns:
+            List of comments for the tweet
+        """
+        endpoint = "fetch_tweet_comments"
+        params = {"tweet_id": tweet_id}
+        all_comments = []
+        current_page = 0
+        while current_page < max_pages:
+            if cursor:
+                params["cursor"] = cursor
+
+            response = self._make_request(endpoint, params)
+
+            if "error" in response:
+                break
+
+            # Extract comments from response
+            if "data" in response:
+                comments = response.get("data", {}).get("comments", [])
+                all_comments.extend(comments)
+
+                # Get next cursor for pagination
+                cursor = response.get("data", {}).get("next_cursor", None)
+                if not cursor:
+                    break
+                current_page += 1
+                time.sleep(self.rate_limit_delay)
+            else:
+                break
+        return all_comments
+
+
     def fetch_trending_topics(self, country: str = "UnitedStates") -> List[Dict]:
         """
         Fetch trending topics for a specific country.

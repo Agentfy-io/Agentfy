@@ -99,6 +99,30 @@
             "type": "List[Dict]",
             "description": "List of users following the specified user"
           }
+        },
+        {
+            "agent_id": "x_crawler",
+            "function_id": "fetch_tweet_comments",
+            "description": "Fetch comments for a specific tweet.",
+            "parameters": [
+                {
+                "name": "tweet_id",
+                "type": "str",
+                "description": "The ID of the tweet to fetch comments for",
+                "required": true
+                },
+                {
+                "name": "max_pages",
+                "type": "int",
+                "description": "Maximum number of pages to fetch",
+                "required": false,
+                "default": 1
+                }
+            ],
+            "returns": {
+                "type": "List[Dict]",
+                "description": "List of comments for the specified tweet"
+            }
         }
       ],
       "analysis": [
