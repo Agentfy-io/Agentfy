@@ -134,15 +134,14 @@
             {
               "name": "tweet_data",
               "type": "List[Dict]",
-              "description": "Collection of tweets to analyze",
+              "description": "Raw tweet data to clean",
               "required": true
             },
             {
-              "name": "metrics",
-              "type": "List[str]",
-              "description": "Engagement metrics to analyze",
-              "required": false,
-              "default": ["likes", "retweets", "replies"]
+              "name": "user_request",
+              "type": "str",
+              "description": "The data that user wants to clean or extract",
+              "required": true
             }
           ],
           "returns": {

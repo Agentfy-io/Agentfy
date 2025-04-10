@@ -277,7 +277,7 @@ if __name__ == "__main__":
     start = time.time()
 
     # Example 1: Search tweets about Elon Musk
-    tweets = crawler.fetch_search_timeline(keyword="Elon Musk", max_pages=2)
+    tweets = crawler.fetch_search_posts(keyword="Elon Musk", max_pages=2)
     crawler.save_to_json(tweets, "elon_musk_tweets.json")
 
     print(f"Time taken for search: {time.time() - start} seconds")

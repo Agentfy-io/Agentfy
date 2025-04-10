@@ -39,18 +39,3 @@ class XCleaner:
         return tweet_data
 
 
-
-# Example usage:
-if __name__ == "__main__":
-
-    x_cleaner = XCleaner()
-    user_request = "Please clean the data by removing any duplicates and irrelevant information."
-    data = [
-        {"tweet": "Hello World!", "user": "user1"},
-        {"tweet": "Hello World!", "user": "user1"},
-        {"tweet": "Goodbye World!", "user": "user2"}
-    ]
-
-    cleaned_data = x_cleaner.clean_data(user_request, data)
-    print(cleaned_data)
-
