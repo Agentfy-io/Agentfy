@@ -9,6 +9,22 @@ from common.ais.chatgpt import ChatGPT
 class XCleaner:
     """
     A class for cleaning and processing X data.
+    raw_data = [{....},{...}....] (Dict)
+
+    raw_data ---> panda dataframe
+
+    list_keys = panda_dataframe.cols (提取所有的键）['user_id', 'tweet_id'.....]
+
+    required_keys  = chatgpt (user_request, list_keys)
+
+    cleaned_data = raw_data[keys] (panda)
+
+    TODO
+    1. 将raw data从list of dict转换成panda，
+    2. 使用panda内置方法提取keys，存储再一个list里面
+    3. 使用gpt来分析需要那些keys
+    4. 使用panda和提取的keys来清洗，并且返回下一步所需要的数据
+
     """
     def __init__(self):
         """
