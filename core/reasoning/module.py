@@ -112,6 +112,10 @@ class ReasoningModule:
         workflow = await self.chatgpt.chat(system_message, user_message)
 
         logger.info("Successfully generated new workflow from ChatGPT")
+
+        # extract workflow data
+        workflow = workflow['response']["choices"][0]["message"]["content"]
+        workflow = json.loads(workflow)
         return workflow
 
     async def _update_workflow_parameters(self,
@@ -137,6 +141,10 @@ class ReasoningModule:
         updated_workflow = await self.chatgpt.chat(system_message, user_message)
 
         logger.info("Successfully updated workflow parameters")
+
+        # extract workflow data
+        updated_workflow = updated_workflow['response']["choices"][0]["message"]["content"]
+        updated_workflow = json.loads(updated_workflow)
         return updated_workflow
 
     def _create_system_message(self, agent_registry: Dict[str, Any]) -> str:
