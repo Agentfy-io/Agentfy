@@ -2,8 +2,11 @@ import requests
 import time
 from typing import Dict, List, Optional, Union, Any
 import json
-from config import settings
 from common.ais.chatgpt import ChatGPT
+import pandas as pd
+import dask.dataframe as dd
+import re
+import ast
 
 
 class XCleaner:
@@ -44,14 +47,44 @@ class XCleaner:
             Cleaned data as a list of dictionaries.
         """
 
-        # let chatgpt clean the data based on user_request
-        system_prompt = "You are a data cleaning assistant. Your job is to clean the data based on the user's request, and return the cleaned data in json."
-        user_prompt = f"Please clean the following data based on the user's request: {user_request}\nData: {tweet_data}"
+        # Step 1: Convert raw data to DataFrame
+        df = pd.DataFrame(tweet_data)
+
+        # Step 2: Extract all keys (column names) from the DataFrame
+        list_keys = df.columns.tolist()
+        print(list_keys)
+
+        # Step 3: Use ChatGPT to determine required keys based on user request
+        system_prompt = "You are a data cleaning assistant. Your job is to analyze the data and determine which keys are required based on the user's request."
+        user_prompt = f"Analyze the following data to return the list element as a list based on the user request: {user_request}\nData keys: {list_keys}"
         response = await self.chatgpt.chat(system_prompt, user_prompt)
 
-        tweet_data = response['response']["choices"][0]["message"]["content"]
-        tweet_data = json.loads(tweet_data)
+        # Step 1: 提取字符串中的 required_keys
+        content = response['response']['choices'][0]['message']['content']
 
-        return tweet_data
+        # 使用正则表达式提取代码块中的内容
+        match = re.search(r"```python\n(.+?)\n```", content, re.DOTALL)
+        if match:
+            # 提取到的字符串形式的列表
+            keys_str = match.group(1)
+            # 使用 ast.literal_eval 将字符串解析为 Python 列表
+            required_keys = ast.literal_eval(keys_str)
+        else:
+            required_keys = []
+
+        print("Extracted required_keys:", required_keys)
+
+        # Step 4: Clean data using the required keys
+        # 使用 Dask 进行并行处理
+        dask_df = dd.from_pandas(df, npartitions=4)
+        cleaned_dask_df = dask_df[required_keys]
+        cleaned_df = cleaned_dask_df.compute()
+
+        # Convert cleaned DataFrame back to list of dictionaries
+        cleaned_data = cleaned_df.to_dict(orient='records')
+
+        return cleaned_data
+
+
 
 

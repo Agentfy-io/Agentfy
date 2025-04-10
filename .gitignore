@@ -6,3 +6,5 @@
 /common/ais/__pycache__
 /common/utils/__pycache__
 /common/__pycache__
+.env
+/agents/x/*.json
