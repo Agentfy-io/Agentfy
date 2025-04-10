@@ -128,8 +128,8 @@
       "analysis": [
         {
           "agent_id": "x_analysis",
-          "function_id": "analyze_tweet_engagement",
-          "description": "Analyzes engagement patterns for tweets",
+          "function_id": "clean_raw_data",
+          "description": "takes all types of X (Twitter) data and cleans it on user's request",
           "parameters": [
             {
               "name": "tweet_data",
