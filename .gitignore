@@ -8,3 +8,4 @@
 /common/__pycache__
 .env
 /agents/x/*.json
+agents/x/__pycache__

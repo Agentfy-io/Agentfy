@@ -52,25 +52,23 @@ class XCleaner:
 
         # Step 2: Extract all keys (column names) from the DataFrame
         list_keys = df.columns.tolist()
-        print(list_keys)
 
         # Step 3: Use ChatGPT to determine required keys based on user request
-        system_prompt = "You are a data cleaning assistant. Your job is to analyze the data and determine which keys are required based on the user's request."
-        user_prompt = f"Analyze the following data to return the list element as a list based on the user request: {user_request}\nData keys: {list_keys}"
+        system_prompt = """You are a data cleaning assistant.
+         Your task is to analyze the user's request and return a JSON-formatted list of elements from the provided data keys 
+         that match the user's needs. Ensure the output is a pure JSON string without any additional formatting, 
+         such as Markdown code blocks (e.g., no ```json ... ```). 
+         The output must be valid JSON that can be directly parsed using json.loads()."""
+        user_prompt = f"""Analyze the following data and return a JSON-formatted list of elements based on the user's request. 
+        Only include elements from the provided data keys that are relevant to the request.
+        User Request: {user_request}
+        Available Data Keys: {list_keys}
+        Output Format: A pure JSON-formatted list (e.g., ["key1", "key2"]) without any additional formatting or Markdown code blocks."""
         response = await self.chatgpt.chat(system_prompt, user_prompt)
 
-        # Step 1: 提取字符串中的 required_keys
-        content = response['response']['choices'][0]['message']['content']
 
-        # 使用正则表达式提取代码块中的内容
-        match = re.search(r"```python\n(.+?)\n```", content, re.DOTALL)
-        if match:
-            # 提取到的字符串形式的列表
-            keys_str = match.group(1)
-            # 使用 ast.literal_eval 将字符串解析为 Python 列表
-            required_keys = ast.literal_eval(keys_str)
-        else:
-            required_keys = []
+        required_keys = json.loads(response['response']['choices'][0]['message']['content'])
+
 
         print("Extracted required_keys:", required_keys)
 
