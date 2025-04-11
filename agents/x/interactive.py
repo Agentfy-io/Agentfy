@@ -10,10 +10,10 @@ import asyncio
 from dotenv import load_dotenv
 from typing import Tuple, Optional, Dict, Any
 from config import settings
-from common.utils.logging import get_logger
+from common.utils.logging import setup_logger
 
 # Set up logger
-logger = get_logger(__name__)
+logger = setup_logger(__name__)
 
 
 class XInteractive:

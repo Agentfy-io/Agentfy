@@ -19,9 +19,10 @@ from common.exceptions.exceptions import (
     InputValidationError, SecurityCheckFailedError,
     FileValidationError, OutputFormattingError
 )
-from common.utils.logging import get_logger
+from common.utils.logging import setup_logger
 
-logger = get_logger(__name__)
+# Set up logger
+logger = setup_logger(__name__)
 
 
 class PerceptionModule:

@@ -17,10 +17,10 @@ from googleapiclient.errors import HttpError
 from dotenv import load_dotenv
 
 from config import settings
-from common.utils.logging import get_logger
+from common.utils.logging import setup_logger
 
 # Set up logger
-logger = get_logger(__name__)
+logger = setup_logger(__name__)
 
 # YouTube API scopes
 # See: https://developers.google.com/youtube/v3/guides/auth/installed-apps

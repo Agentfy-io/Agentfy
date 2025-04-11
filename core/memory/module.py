@@ -4,13 +4,13 @@ from datetime import datetime
 import json
 import uuid
 
-from ...common.models.messages import ChatMessage
-from ...common.models.workflows import WorkflowDefinition
-from ...common.exceptions.exceptions import RecordNotFoundError, StorageError
-from ...common.utils.logging import get_logger
+from common.models.messages import ChatMessage
+from common.models.workflows import WorkflowDefinition
+from common.exceptions.exceptions import RecordNotFoundError, StorageError
+from common.utils.logging import setup_logger
 
-logger = get_logger(__name__)
-
+# Set up logger
+logger = setup_logger(__name__)
 
 class MemoryModule:
     """

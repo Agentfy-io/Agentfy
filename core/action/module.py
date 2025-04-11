@@ -10,14 +10,15 @@ import asyncio
 from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
 
-from common.utils.logging import get_logger
 from common.exceptions.exceptions import WorkflowExecutionError, StepExecutionError
 from common.models.workflows import (
     WorkflowDefinition, WorkflowStep, ParameterValidationResult, StepResult,
     ExecutionResult, StepMetrics, ExecutionMetrics, ExecutionError
 )
+from common.utils.logging import setup_logger
 
-logger = get_logger(__name__)
+# Set up logger
+logger = setup_logger(__name__)
 
 
 class ActionModule:

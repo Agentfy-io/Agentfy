@@ -1,108 +1,71 @@
-# -*- coding: utf-8 -*-
-"""
-@file: agentfy/common/utils/logging.py
-@desc: customized exceptions
-@auth: Callmeiks
-"""
 import logging
-import logging.config
-import json
+import sys
 import os
-from datetime import datetime
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 
-class CustomJsonFormatter(logging.Formatter):
-    """Custom JSON formatter for structured logging."""
+def setup_logger(name, level=None):
+    """
+    Set up and return a configured logger
 
-    def format(self, record):
-        log_record = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "level": record.levelname,
-            "module": record.module,
-            "function": record.funcName,
-            "line": record.lineno,
-            "message": record.getMessage(),
-        }
+    Args:
+        name (str): Name of the logger
+        level (str, optional): Logging level. Options are 'debug', 'info', 'warning', 'error', 'critical'.
+                               If not specified, it reads from the LOG_LEVEL environment variable, defaulting to 'info'.
 
-        # Include exception info if available
-        if record.exc_info:
-            log_record["exception"] = self.formatException(record.exc_info)
+    Returns:
+        logging.Logger: Configured logger
+    """
+    if level is None:
+        level = os.getenv("LOG_LEVEL", "info").upper()
 
-        # Include custom fields
-        if hasattr(record, 'data') and record.data:
-            log_record.update(record.data)
-
-        return json.dumps(log_record)
-
-
-def setup_logging(log_level=None, log_file=None):
-    """Configure logging with structured JSON format."""
-    config = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "json": {
-                "()": CustomJsonFormatter
-            },
-            "standard": {
-                "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            }
-        },
-        "handlers": {
-            "console": {
-                "class": "logging.StreamHandler",
-                "level": log_level or "INFO",
-                "formatter": "standard" if os.getenv("HUMAN_READABLE_LOGS", "false").lower() == "true" else "json",
-                "stream": "ext://sys.stdout"
-            }
-        },
-        "loggers": {
-            "": {
-                "handlers": ["console"],
-                "level": log_level or "INFO",
-                "propagate": True
-            }
-        }
-    }
-
-    # Add file handler if log file is specified
-    if log_file:
-        config["handlers"]["file"] = {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": log_level or "INFO",
-            "formatter": "json",
-            "filename": log_file,
-            "maxBytes": 10485760,  # 10 MB
-            "backupCount": 5
-        }
-        config["loggers"][""]["handlers"].append("file")
-
-    logging.config.dictConfig(config)
-    return logging.getLogger()
-
-
-def get_logger(name):
-    """Get a logger with the given name."""
+    # Create the logger
     logger = logging.getLogger(name)
 
-    # Add a method to log with extra data
-    def log_with_data(level, msg, data=None, *args, **kwargs):
-        if data:
-            extra = kwargs.get("extra", {})
-            extra["data"] = data
-            kwargs["extra"] = extra
-        logger.log(level, msg, *args, **kwargs)
+    # If the logger already has handlers, return it without reconfiguring
+    if logger.handlers:
+        return logger
 
-    # Add convenience methods
-    logger.debug_with_data = lambda msg, data=None, *args, **kwargs: log_with_data(logging.DEBUG, msg, data, *args,
-                                                                                   **kwargs)
-    logger.info_with_data = lambda msg, data=None, *args, **kwargs: log_with_data(logging.INFO, msg, data, *args,
-                                                                                  **kwargs)
-    logger.warning_with_data = lambda msg, data=None, *args, **kwargs: log_with_data(logging.WARNING, msg, data, *args,
-                                                                                     **kwargs)
-    logger.error_with_data = lambda msg, data=None, *args, **kwargs: log_with_data(logging.ERROR, msg, data, *args,
-                                                                                   **kwargs)
-    logger.critical_with_data = lambda msg, data=None, *args, **kwargs: log_with_data(logging.CRITICAL, msg, data,
-                                                                                      *args, **kwargs)
+    # Set logging level
+    numeric_level = getattr(logging, level.upper(), logging.INFO)
+    logger.setLevel(numeric_level)
+
+    # Create a formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    # Create a console handler and set UTF-8 encoding
+    console_handler = logging.StreamHandler(sys.stdout)
+    # Handle Chinese characters in Windows console
+    try:
+        # Python 3.7+
+        console_handler.stream.reconfigure(encoding='utf-8')
+    except AttributeError:
+        # For older versions, set environment variable instead
+        os.environ["PYTHONIOENCODING"] = "utf-8"
+
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    # Create log directory
+    log_dir = Path("logs")
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create a rotating file handler (max 10MB per file, keep 10 backups), with UTF-8 encoding
+    file_handler = RotatingFileHandler(
+        log_dir / f"{name.replace('.', '_')}.log",
+        maxBytes=10 * 1024 * 1024,  # 10MB
+        backupCount=10,
+        encoding='utf-8'  # Explicitly set UTF-8 encoding
+    )
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
     return logger
+
+
+# Create the default logger
+logger = setup_logger("agentfy_backend")

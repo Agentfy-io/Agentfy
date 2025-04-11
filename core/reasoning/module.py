@@ -9,13 +9,14 @@ from typing import Any, Dict, List, Optional, Tuple
 import uuid
 from datetime import datetime
 
-from common.utils.logging import get_logger
 from common.ais.chatgpt import ChatGPT
 from config import settings
 from common.exceptions.exceptions import AnalysisError, ChatGPTAPIError
 from common.models.workflows import WorkflowDefinition, MissingParameter,  ParameterConflict, WorkflowStep, Parameter, ParameterValidationResult
+from common.utils.logging import setup_logger
 
-logger = get_logger(__name__)
+# Set up logger
+logger = setup_logger(__name__)
 
 
 class ReasoningModule:

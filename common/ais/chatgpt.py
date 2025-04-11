@@ -10,12 +10,11 @@ from decimal import Decimal
 
 from openai import AsyncOpenAI, OpenAIError
 from config import settings
-from common.utils.logging import get_logger
 from common.exceptions.exceptions import ChatGPTAPIError
+from common.utils.logging import setup_logger
 
 # Set up logger
-logger = get_logger(__name__)
-
+logger = setup_logger(__name__)
 
 class ChatGPT:
     """OpenAI API client wrapper class, supporting asynchronous calls to ChatGPT models"""
