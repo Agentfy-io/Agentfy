@@ -15,6 +15,17 @@ class Parameter(BaseModel):
     type: str
     description: Optional[str] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "type": self.type,
+            "description": self.description,
+            "required": self.required,
+            "function_id": self.function_id,
+            "step_id": self.step_id,
+            "suggestions": self.suggestions
+        }
+
 class MissingParameter(BaseModel):
     name: str
     type: str
@@ -24,12 +35,36 @@ class MissingParameter(BaseModel):
     step_id: str
     suggestions: Optional[List[Any]] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "parameter": self.parameter,
+            "function_id": self.function_id,
+            "step_id": self.step_id,
+            "reason": self.reason,
+            "resolution": self.resolution
+        }
+
 class ParameterConflict(BaseModel):
     parameter: str
     function_id: str
     step_id: str
     reason: str
     resolution: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "step_id": self.step_id,
+            "agent_id": self.agent_id,
+            "function_id": self.function_id,
+            "description": self.description,
+            "parameters": self.parameters,
+            "conditional_execution": self.conditional_execution,
+            "retry_policy": self.retry_policy,
+            "on_success": self.on_success,
+            "on_failure": self.on_failure,
+            "timeout": self.timeout
+        }
+
 
 class Entity(BaseModel):
     type: str
@@ -49,6 +84,20 @@ class WorkflowStep(BaseModel):
     on_failure: Optional[List[str]] = None
     timeout: Optional[int] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "step_id": self.step_id,
+            "agent_id": self.agent_id,
+            "function_id": self.function_id,
+            "description": self.description,
+            "parameters": self.parameters,
+            "conditional_execution": self.conditional_execution,
+            "retry_policy": self.retry_policy,
+            "on_success": self.on_success,
+            "on_failure": self.on_failure,
+            "timeout": self.timeout
+        }
+
 class WorkflowDefinition(BaseModel):
     workflow_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
@@ -58,11 +107,37 @@ class WorkflowDefinition(BaseModel):
     steps: List[WorkflowStep]
     output_format: str = "json"
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "workflow_id": self.workflow_id,
+            "name": self.name,
+            "description": self.description,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "steps": [step.to_dict() for step in self.steps] if self.steps else None,
+            "output_format": self.output_format
+        }
+
+
 class ParameterValidationResult(BaseModel):
     is_valid: bool # True if all parameters are valid
     missing_required_parameters: List[MissingParameter] = None
     recommended_parameters: List[Parameter] = None
     parameter_conflicts: List[ParameterConflict] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "is_valid": self.is_valid,
+            "missing_required_parameters": [
+                param.to_dict() for param in self.missing_required_parameters
+            ] if self.missing_required_parameters else None,
+            "recommended_parameters": [
+                param.to_dict() for param in self.recommended_parameters
+            ] if self.recommended_parameters else None,
+            "parameter_conflicts": [
+                conflict.to_dict() for conflict in self.parameter_conflicts
+            ] if self.parameter_conflicts else None
+        }
 
 class StepMetrics(BaseModel):
     duration_ms: int
@@ -95,6 +170,15 @@ class ExecutionMetrics(BaseModel):
     api_calls: int
     data_processed: int
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "total_duration": self.total_duration,
+            "step_durations": self.step_durations,
+            "resource_utilization": self.resource_utilization,
+            "api_calls": self.api_calls,
+            "data_processed": self.data_processed
+        }
+
 class ExecutionResult(BaseModel):
     workflow_id: str
     status: Literal["COMPLETED", "FAILED", "PAUSED", "CANCELLED"]
@@ -104,3 +188,18 @@ class ExecutionResult(BaseModel):
     outputs: Dict[str, Any] = None
     errors: List[ExecutionError] = None
     metrics: ExecutionMetrics
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "workflow_id": self.workflow_id,
+            "status": self.status,
+            "start_time": self.start_time.isoformat(),
+            "end_time": self.end_time.isoformat() if self.end_time else None,
+            "step_results": {
+                step_id: step_result.dict()
+                for step_id, step_result in self.step_results.items()
+            } if self.step_results else None,
+            "outputs": self.outputs,
+            "errors": [error.dict() for error in self.errors] if self.errors else None,
+            "metrics": self.metrics.dict() if self.metrics else None
+        }
