@@ -5,11 +5,13 @@
 @auth: Callmeiks
 """
 import json
+import re
 from typing import Any, Dict, List, Optional, Tuple
 import uuid
 from datetime import datetime
 
 from common.ais.chatgpt import ChatGPT
+from common.models.messages import ChatMessage
 from config import settings
 from common.exceptions.exceptions import AnalysisError, ChatGPTAPIError
 from common.models.workflows import WorkflowDefinition, MissingParameter,  ParameterConflict, WorkflowStep, Parameter, ParameterValidationResult
@@ -29,6 +31,7 @@ class ReasoningModule:
         """Initialize the reasoning module with configuration."""
         self.config = settings
         self.chatgpt = ChatGPT()
+
 
 
     async def analyze_request_and_build_workflow(self,
@@ -162,7 +165,7 @@ class ReasoningModule:
         2. Identify the appropriate agents and functions needed to fulfill the request
         3. Create a workflow with the necessary steps in the correct order
         4. Identify any missing parameters needed only for the first step of the workflow
-        5. If there are any parameter conflicts, include them in the parameter_conflicts array
+        5. If there are any parameter conflicts, include them in the parameter_conflicts array (first step only)
 
         Return ONLY a JSON object with the following structure:
         {{
@@ -188,7 +191,7 @@ class ReasoningModule:
                     "type": "string/number/boolean",
                     "required": true/false,
                     "function_id": "function-id",  // Indicate which function needs this parameter
-                    "step_id": "step1"  // Indicate which step needs this parameter
+                    "step_id": "step1"  // Only for the first step
                 }}
             ]
             "parameter_conflicts": [
