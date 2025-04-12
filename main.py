@@ -39,11 +39,6 @@ reasoning = ReasoningModule()
 action = ActionModule()
 
 
-# Load agent registry
-def get_agent_registry():
-    registry_path = os.getenv("AGENT_REGISTRY_PATH", "agents_registry.json")
-    with open(registry_path, "r") as f:
-        return json.load(f)
 
 
 @app.post("/process")
