@@ -55,7 +55,7 @@ class PerceptionModule:
             if isinstance(input_data, dict):
                 input_data = UserInput(**input_data)
 
-            logger.info_with_data(
+            logger.info(
                 "Validating user input",
                 {"user_id": input_data.metadata.user_id}
             )
@@ -66,7 +66,7 @@ class PerceptionModule:
             if input_data.text:
                 security_check = self.security_validator.check_for_injection(input_data.text)
                 if not security_check.is_safe:
-                    logger.warning_with_data(
+                    logger.warning(
                         "Security check failed",
                         {
                             "user_id": input_data.metadata.user_id,
@@ -103,7 +103,7 @@ class PerceptionModule:
             )
 
         except ValidationError as e:
-            logger.error_with_data(
+            logger.error(
                 "Input validation error",
                 {"error": str(e)}
             )
@@ -113,7 +113,7 @@ class PerceptionModule:
             )
 
         except Exception as e:
-            logger.error_with_data(
+            logger.error(
                 "Unexpected error during input validation",
                 {"error": str(e)}
             )
@@ -137,7 +137,7 @@ class PerceptionModule:
             OutputFormattingError: If output formatting fails
         """
         try:
-            logger.info_with_data(
+            logger.info(
                 "Formatting output",
                 {"format": output_format}
             )
@@ -202,7 +202,7 @@ class PerceptionModule:
                 raise OutputFormattingError(f"Unsupported output format: {output_format}")
 
         except Exception as e:
-            logger.error_with_data(
+            logger.error(
                 "Output formatting error",
                 {"error": str(e), "format": output_format}
             )
@@ -250,7 +250,7 @@ class PerceptionModule:
             )
 
         except Exception as e:
-            logger.error_with_data(
+            logger.error(
                 "Error generating parameter prompt",
                 {"error": str(e)}
             )
@@ -270,7 +270,7 @@ class PerceptionModule:
         Returns:
             FormattedOutput: Formatted error message
         """
-        logger.error_with_data(
+        logger.error(
             "Handling input error",
             {"error_message": error.message, "details": error.details}
         )

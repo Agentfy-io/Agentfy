@@ -4,6 +4,10 @@ from typing import Dict, List, Optional, Union, Any
 import json
 from config import settings
 from common.ais.chatgpt import ChatGPT
+from common.utils.logging import setup_logger
+
+# Set up logger
+logger = setup_logger(__name__)
 
 
 class XCleaner:
