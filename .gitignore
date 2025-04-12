@@ -6,3 +6,12 @@
 /common/ais/__pycache__
 /common/utils/__pycache__
 /common/__pycache__
+/.idea
+/agents/youtube/logs
+/common/security/__pycache__
+/common/models/__pycache__
+/core/__pycache__
+/core/perception/__pycache__
+/core/memory/__pycache__
+/core/reasoning/__pycache__
+/logs
