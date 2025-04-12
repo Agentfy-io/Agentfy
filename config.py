@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     x_api_secret: Optional[str] = Field(None, env="X_API_SECRET")
     x_access_token: Optional[str] = Field(None, env="X_ACCESS_TOKEN")
     x_access_token_secret: Optional[str] = Field(None, env="X_ACCESS_TOKEN_SECRET")
+    youtube_api_key: Optional[str] = Field(None, env="YOUTUBE_API_KEY")
+    youtube_client_id: Optional[str] = Field(None, env="YOUTUBE_CLIENT_ID")
+    youtube_client_secret: Optional[str] = Field(None, env="YOUTUBE_CLIENT_SECRET")
 
     # TikHub data source
     tikhub_base_url: str = "https://api.tikhub.io"
