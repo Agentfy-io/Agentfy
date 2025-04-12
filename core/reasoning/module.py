@@ -115,7 +115,8 @@ class ReasoningModule:
         logger.info("Successfully generated new workflow from ChatGPT")
 
         # extract workflow data
-        workflow = workflow['response']["choices"][0]["message"]["content"]
+        workflow = workflow['response']["choices"][0]["message"]["content"].strip()
+        workflow = re.sub(r'//.*?(\n|$)', '\n', workflow)
         workflow = json.loads(workflow)
         return workflow
 
