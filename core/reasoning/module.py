@@ -34,7 +34,7 @@ class ReasoningModule:
     async def analyze_request_and_build_workflow(self,
                                                  user_request: str,
                                                  agent_registry: Dict[str, Any],
-                                                 chat_history: List[Dict[str, Any]] = None,
+                                                 chat_history: List[ChatMessage] = None,
                                                  existing_workflow: Dict[str, Any] = None) -> Tuple[WorkflowDefinition, ParameterValidationResult]:
         """
         Analyze user request and build workflow using ChatGPT.
