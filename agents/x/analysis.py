@@ -5,6 +5,7 @@ import json
 from config import settings
 from common.ais.chatgpt import ChatGPT
 from common.utils.logging import setup_logger
+import pandas as pd
 
 # Set up logger
 logger = setup_logger(__name__)
@@ -47,13 +48,29 @@ class XCleaner:
         Returns:
             Cleaned data as a list of dictionaries.
         """
-
+        # Convert raw data to pandas DataFrame
+        logger.info("starting to clean data")
+        df = pd.DataFrame(tweet_data)
+        list_keys = df.columns.tolist()
+        logger.info(f"Extracted keys from data: {list_keys}")
         # let chatgpt clean the data based on user_request
-        system_prompt = "You are a data cleaning assistant. Your job is to clean the data based on the user's request, and return the cleaned data in json."
-        user_prompt = f"Please clean the following data based on the user's request: {user_request}\nData: {tweet_data}"
+        system_prompt = (
+            "You are a data preprocessing assistant specialized in cleaning structured data. "
+            "Given a user's intent and a list of column names (keys), your task is to decide which keys are relevant for further analysis. "
+            "You will not clean the actual values, only determine the subset of keys to retain. "
+            "Output a JSON list of relevant keys based strictly on the user request. "
+            "Do not add explanation or extra text—only return the JSON list."
+        )
+        user_prompt = (
+            f"The user wants to clean and filter tweet data with the following intent:\n\n"
+            f"{user_request}\n\n"
+            f"Here are the available keys in the data:\n{list_keys}\n\n"
+            f"Please return a JSON array (e.g., [\"key1\", \"key2\"]) containing only the keys relevant to the user's request."
+        )
+
         response = await self.chatgpt.chat(system_prompt, user_prompt)
 
-        tweet_data = response['response']["choices"][0]["message"]["content"]
+        tweet_data = response['response']["choices"][0]["message"]["content"].stripe()
         tweet_data = json.loads(tweet_data)
 
         return tweet_data
