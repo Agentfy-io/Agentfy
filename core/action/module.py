@@ -51,6 +51,7 @@ class ActionModule:
         """
         try:
             workflow_id = workflow.workflow_id
+            start_time = datetime.utcnow()
             logger.info(f"Preparing to execute workflow: {workflow_id}")
 
             # Check if all parameters are valid before starting
@@ -59,7 +60,7 @@ class ActionModule:
                 return ExecutionResult(
                     workflow_id=workflow_id,
                     status="FAILED",
-                    start_time=datetime.utcnow(),
+                    start_time=start_time,
                     end_time=datetime.utcnow(),
                     step_results={},
                     outputs={},
@@ -80,7 +81,6 @@ class ActionModule:
                 )
 
             # Initialize execution context
-            start_time = datetime.utcnow()
             context = {
                 "workflow_id": workflow_id,
                 "start_time": start_time,

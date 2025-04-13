@@ -77,6 +77,7 @@ class ReasoningModule:
 
             # Convert to proper model objects
             workflow = self._convert_to_workflow_definition(workflow_data)
+            logger.info(f"Generated workflow: {workflow}")
             missing_parameters = self._extract_missing_parameters(workflow_data)
             parameter_conflicts = self._extract_parameter_conflicts(workflow_data)
 
@@ -181,7 +182,8 @@ class ReasoningModule:
                     "parameters": {{
                         "param1": "value1",
                         "param2": "value2"
-                    }}
+                    }},
+                    "return_type": "Dict"
                 }},
             ],
             "missing_parameters": [
@@ -243,6 +245,7 @@ class ReasoningModule:
                         "param1": "updated-value1",  // Update with new values from user input
                         "param2": "value2"
                     }}
+                    "return_type": "Dict"
                 }}
             ],
             "missing_parameters": [
@@ -322,7 +325,8 @@ class ReasoningModule:
                 agent_id=step_data.get("agent_id", ""),
                 function_id=step_data.get("function_id", ""),
                 description=step_data.get("description", ""),
-                parameters=step_data.get("parameters", {})
+                parameters=step_data.get("parameters", {}),
+                return_type=step_data.get("return_type", "Dict"),
             )
             steps.append(step)
 
@@ -344,13 +348,15 @@ class ReasoningModule:
         missing_params = []
 
         for param_data in workflow_data.get("missing_parameters", []):
+            if param_data.get('step_id') != 'step1':
+                continue
             missing_param = MissingParameter(
                 name=param_data.get("name", ""),
                 type=param_data.get("type", "string"),
                 description=param_data.get("description", ""),
                 required=param_data.get("required", True),
                 function_id=param_data.get("function_id", ""),
-                step_id=param_data.get("step_id", "step1")
+                step_id="step1",  # Only for the first step
             )
             missing_params.append(missing_param)
 

@@ -72,12 +72,21 @@ class Entity(BaseModel):
     relevance: float
     metadata: Dict[str, Any] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "type": self.type,
+            "value": self.value,
+            "relevance": self.relevance,
+            "metadata": self.metadata
+        }
+
 class WorkflowStep(BaseModel):
     step_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     agent_id: str
     function_id: str
     description: str
     parameters: Dict[str, Any] = None
+    return_type: Optional[str] = None
     conditional_execution: Optional[Dict[str, Any]] = None
     retry_policy: Optional[Dict[str, Any]] = None
     on_success: Optional[List[str]] = None
@@ -91,6 +100,7 @@ class WorkflowStep(BaseModel):
             "function_id": self.function_id,
             "description": self.description,
             "parameters": self.parameters,
+            "return_type": self.return_type,
             "conditional_execution": self.conditional_execution,
             "retry_policy": self.retry_policy,
             "on_success": self.on_success,
@@ -146,6 +156,15 @@ class StepMetrics(BaseModel):
     api_calls: int
     data_processed: int
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "duration_ms": self.duration_ms,
+            "cpu_usage": self.cpu_usage,
+            "memory_usage": self.memory_usage,
+            "api_calls": self.api_calls,
+            "data_processed": self.data_processed
+        }
+
 class ExecutionError(BaseModel):
     error_code: str
     message: str
@@ -153,6 +172,16 @@ class ExecutionError(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     recoverable: bool = False
     details: Dict[str, Any] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "error_code": self.error_code,
+            "message": self.message,
+            "step_id": self.step_id,
+            "timestamp": self.timestamp.isoformat(),
+            "recoverable": self.recoverable,
+            "details": self.details
+        }
 
 class StepResult(BaseModel):
     step_id: str
@@ -162,6 +191,17 @@ class StepResult(BaseModel):
     output: Optional[Any] = None
     error: Optional[ExecutionError] = None
     metrics: StepMetrics
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "step_id": self.step_id,
+            "status": self.status,
+            "start_time": self.start_time.isoformat(),
+            "end_time": self.end_time.isoformat(),
+            "output": self.output,
+            "error": self.error.to_dict() if self.error else None,
+            "metrics": self.metrics.to_dict() if self.metrics else None
+        }
 
 class ExecutionMetrics(BaseModel):
     total_duration: int
@@ -196,10 +236,10 @@ class ExecutionResult(BaseModel):
             "start_time": self.start_time.isoformat(),
             "end_time": self.end_time.isoformat() if self.end_time else None,
             "step_results": {
-                step_id: step_result.dict()
+                step_id: step_result.to_dict()
                 for step_id, step_result in self.step_results.items()
             } if self.step_results else None,
             "outputs": self.outputs,
-            "errors": [error.dict() for error in self.errors] if self.errors else None,
-            "metrics": self.metrics.dict() if self.metrics else None
+            "errors": [error.to_dict() for error in self.errors] if self.errors else None,
+            "metrics": self.metrics.to_dict() if self.metrics else None
         }
