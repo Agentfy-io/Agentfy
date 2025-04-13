@@ -19,7 +19,12 @@
               "description": "Type of search results to return",
               "required": false,
               "default": "Top",
-              "enum": ["Top", "Latest", "People", "Media"]
+              "enum": [
+                "Top",
+                "Latest",
+                "People",
+                "Media"
+              ]
             },
             {
               "name": "max_pages",
@@ -101,52 +106,52 @@
           }
         },
         {
-            "agent_id": "x_crawler",
-            "function_id": "fetch_tweet_comments",
-            "description": "Fetch comments for a specific tweet.",
-            "parameters": [
-                {
-                "name": "tweet_id",
-                "type": "str",
-                "description": "The ID of the tweet to fetch comments for",
-                "required": true
-                },
-                {
-                "name": "max_pages",
-                "type": "int",
-                "description": "Maximum number of pages to fetch",
-                "required": false,
-                "default": 1
-                }
-            ],
-            "returns": {
-                "type": "List[Dict]",
-                "description": "List of comments for the specified tweet"
+          "agent_id": "x_crawler",
+          "function_id": "fetch_tweet_comments",
+          "description": "Fetch comments for a specific tweet.",
+          "parameters": [
+            {
+              "name": "tweet_id",
+              "type": "str",
+              "description": "The ID of the tweet to fetch comments for",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
             }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of comments for the specified tweet"
+          }
         }
       ],
       "analysis": [
         {
           "agent_id": "x_analysis",
           "function_id": "clean_raw_data",
-          "description": "takes all types of X (Twitter) data and cleans it on user's request",
+          "description": "Cleans and filters raw Twitter (X) data based on user intent by selecting only relevant fields.",
           "parameters": [
             {
               "name": "tweet_data",
               "type": "List[Dict]",
-              "description": "Raw tweet data to clean",
+              "description": "Raw tweet data as a list of dictionaries, typically retrieved from X/Twitter API.",
               "required": true
             },
             {
               "name": "user_request",
               "type": "str",
-              "description": "The data that user wants to clean or extract",
+              "description": "A natural language request describing what kind of data or fields the user is interested in.",
               "required": true
             }
           ],
           "returns": {
-            "type": "Dict",
-            "description": "Analysis results of tweet engagement patterns"
+            "type": "List[Dict]",
+            "description": "Cleaned tweet data containing only the fields relevant to the user's request."
           }
         }
       ],
