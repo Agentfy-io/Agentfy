@@ -14,7 +14,8 @@ from common.ais.chatgpt import ChatGPT
 from common.models.messages import ChatMessage
 from config import settings
 from common.exceptions.exceptions import AnalysisError, ChatGPTAPIError
-from common.models.workflows import WorkflowDefinition, MissingParameter,  ParameterConflict, WorkflowStep, Parameter, ParameterValidationResult
+from common.models.workflows import WorkflowDefinition, MissingParameter, ParameterConflict, WorkflowStep, Parameter, \
+    ParameterValidationResult
 from common.utils.logging import setup_logger
 
 # Set up logger
@@ -32,13 +33,12 @@ class ReasoningModule:
         self.config = settings
         self.chatgpt = ChatGPT()
 
-
-
     async def analyze_request_and_build_workflow(self,
                                                  user_request: str,
                                                  agent_registry: Dict[str, Any],
                                                  chat_history: List[ChatMessage] = None,
-                                                 existing_workflow: Dict[str, Any] = None) -> Tuple[WorkflowDefinition, ParameterValidationResult]:
+                                                 existing_workflow: Dict[str, Any] = None) -> Tuple[
+        WorkflowDefinition, ParameterValidationResult]:
         """
         Analyze user request and build workflow using ChatGPT.
         Handles both new requests and parameter updates for existing workflows.
@@ -77,7 +77,6 @@ class ReasoningModule:
 
             # Convert to proper model objects
             workflow = self._convert_to_workflow_definition(workflow_data)
-            logger.info(f"Generated workflow: {workflow}")
             missing_parameters = self._extract_missing_parameters(workflow_data)
             parameter_conflicts = self._extract_parameter_conflicts(workflow_data)
 
@@ -164,9 +163,15 @@ class ReasoningModule:
         Your task is to:
         1. Understand the user's request
         2. Identify the appropriate agents and functions needed to fulfill the request
-        3. Create a workflow with the necessary steps in the correct order
-        4. Identify any missing parameters needed only for the first step of the workflow
-        5. If there are any parameter conflicts, include them in the parameter_conflicts array (first step only)
+        3. ⚠️ Very Important: If the workflow includes any **crawler functions** (functions under an agent with ID containing "crawler"),
+        you **must** add a **cleaning step** of required platform right after it using an available analysis function (e.g., `clean_data`).
+        The cleaning step should extract the relevant fields needed for the next action, such as user_id, tweet content, etc.
+        4. Make sure that any function that depends on specific parameters only receives data that has been explicitly prepared in prior steps.
+        5. If the values of the parameters are from the previous steps, please leave them empty.
+        6. Create a workflow with the necessary steps in the correct logical order.
+        7. Identify any missing parameters needed only for the first step of the workflow.
+        8. If there are any parameter conflicts (in the first step only), include them in the `parameter_conflicts` array.
+
 
         Return ONLY a JSON object with the following structure:
         {{
@@ -180,8 +185,14 @@ class ReasoningModule:
                     "function_id": "function-id",
                     "description": "Step description",
                     "parameters": {{
-                        "param1": "value1",
-                        "param2": "value2"
+                        "param1": {{
+                            "type": "" //from agent_registry,
+                            "value": "value1"  // Leave empty if from previous step
+                        }}
+                        "param2": {{
+                            "type": "" //from agent_registry,
+                            "value": "value2"  // Leave empty if from previous step
+                        }}
                     }},
                     "return_type": "Dict"
                 }},
@@ -190,7 +201,7 @@ class ReasoningModule:
                 {{
                     "name": "parameter-name",
                     "description": "Parameter description",
-                    "type": "string/number/boolean",
+                    "required_type": "", // base on agent_registry 
                     "required": true/false,
                     "function_id": "function-id",  // Indicate which function needs this parameter
                     "step_id": "step1"  // Only for the first step
@@ -232,9 +243,9 @@ class ReasoningModule:
 
         Return ONLY a JSON object with the following structure:
         {{
-            "workflow_id": "existing-workflow-id",  // Preserve the original workflow ID
-            "name": "Workflow name",  // Preserve the original name
-            "description": "Workflow description",  // Preserve the original description
+            "workflow_id": "unique-id",
+            "name": "Workflow name",
+            "description": "Workflow description",
             "steps": [
                 {{
                     "step_id": "step1",
@@ -242,28 +253,26 @@ class ReasoningModule:
                     "function_id": "function-id",
                     "description": "Step description",
                     "parameters": {{
-                        "param1": "updated-value1",  // Update with new values from user input
-                        "param2": "value2"
-                    }}
+                        "param1": {{
+                            "type": "" //from agent_registry,
+                            "value": "value1"  // Leave empty if from previous step
+                        }}
+                        "param2": {{
+                            "type": "" //from agent_registry,
+                            "value": "value2"  // Leave empty if from previous step
+                        }}
+                    }},
                     "return_type": "Dict"
-                }}
+                }},
             ],
             "missing_parameters": [
                 {{
                     "name": "parameter-name",
                     "description": "Parameter description",
-                    "type": "string/number/boolean",
+                    "required_type": "", // base on agent_registry 
                     "required": true/false,
-                    "function_id": "function-id", 
-                    "step_id": "step1"  
-                }},
-                {{
-                    "name": "another-parameter-name",
-                    "description": "Another parameter description",
-                    "type": "string/number/boolean",
-                    "required": true/false,
-                    "function_id": "function-id", 
-                    "step_id": "step1"  
+                    "function_id": "function-id",  // Indicate which function needs this parameter
+                    "step_id": "step1"  // Only for the first step
                 }}
             ]
             "parameter_conflicts": [
@@ -362,7 +371,7 @@ class ReasoningModule:
 
         return missing_params
 
-    def _extract_parameter_conflicts(self, workflow_data)-> List[ParameterConflict]:
+    def _extract_parameter_conflicts(self, workflow_data) -> List[ParameterConflict]:
         """Extract parameter conflicts from workflow data."""
         conflicts = []
 

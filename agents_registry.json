@@ -5,7 +5,7 @@
         {
           "agent_id": "x_crawler",
           "function_id": "fetch_search_posts",
-          "description": "Search tweets based on keywords",
+          "description": "Search raw tweets data  based on keywords",
           "parameters": [
             {
               "name": "keyword",
@@ -36,13 +36,13 @@
           ],
           "returns": {
             "type": "List[Dict]",
-            "description": "List of tweets matching the search criteria"
+            "description": "List of raw tweets data matching the search criteria"
           }
         },
         {
           "agent_id": "x_crawler",
           "function_id": "fetch_user_tweets",
-          "description": "Fetch tweets posted by a specific user",
+          "description": "Fetch raw tweets data posted by a specific user",
           "parameters": [
             {
               "name": "screen_name",
@@ -60,7 +60,7 @@
           ],
           "returns": {
             "type": "List[Dict]",
-            "description": "List of tweets posted by the specified user"
+            "description": "List of raw tweets data posted by the specified user"
           }
         },
         {
@@ -84,7 +84,7 @@
         {
           "agent_id": "x_crawler",
           "function_id": "fetch_user_followers",
-          "description": "Fetch followers of a specific user",
+          "description": "Fetch raw followers data of a specific user",
           "parameters": [
             {
               "name": "screen_name",
@@ -102,13 +102,13 @@
           ],
           "returns": {
             "type": "List[Dict]",
-            "description": "List of users following the specified user"
+            "description": "List of raw users data following the specified user"
           }
         },
         {
           "agent_id": "x_crawler",
           "function_id": "fetch_tweet_comments",
-          "description": "Fetch comments for a specific tweet.",
+          "description": "Fetch raw comments data for a specific tweet.",
           "parameters": [
             {
               "name": "tweet_id",
@@ -126,20 +126,20 @@
           ],
           "returns": {
             "type": "List[Dict]",
-            "description": "List of comments for the specified tweet"
+            "description": "List of raw comments data  for the specified tweet"
           }
         }
       ],
       "analysis": [
         {
           "agent_id": "x_analysis",
-          "function_id": "clean_raw_data",
+          "function_id": "clean_data",
           "description": "Cleans and filters raw Twitter (X) data based on user intent by selecting only relevant fields.",
           "parameters": [
             {
               "name": "tweet_data",
               "type": "List[Dict]",
-              "description": "Raw tweet data as a list of dictionaries, typically retrieved from X/Twitter API.",
+              "description": "Raw tweet data as a list of dictionaries, typically retrieved from X/Twitter crawlers.",
               "required": true
             },
             {
@@ -163,8 +163,8 @@
           "parameters": [
             {
               "name": "message",
-              "type": "str",
-              "description": "The text content of the tweet (max 280 characters)",
+              "type": "List[str]",
+              "description": "A list of text content for the tweet (max 280 characters)",
               "required": true
             }
           ],
@@ -219,9 +219,9 @@
           "description": "Send a direct message to a user on X (Twitter)",
           "parameters": [
             {
-              "name": "recipient_id",
-              "type": "str",
-              "description": "The user ID of the recipient",
+              "name": "recipient_ids",
+              "type": "List[str]",
+              "description": "List of recipient user IDs to send the message to",
               "required": true
             },
             {
