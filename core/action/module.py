@@ -7,8 +7,12 @@
 import importlib
 import inspect
 import asyncio
-from typing import Any, Dict, List, Optional, Union
+import json
+import os
+from typing import Any, Dict, List, Optional, Union, Tuple
 from datetime import datetime
+
+from pyasn1.type.univ import Boolean
 
 from common.exceptions.exceptions import WorkflowExecutionError, StepExecutionError
 from common.models.workflows import (
@@ -33,6 +37,19 @@ class ActionModule:
 
         # load agen_registry json from agents.agent_registry route
         # self.agent_registry = self.load_agent_registry()
+
+    # Load agent registry
+    async def get_agent_registry(self):
+        registry_path = os.getenv("AGENT_REGISTRY_PATH", "agents_registry.json")
+        try:
+            with open(registry_path, "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print(f"Registry file not found at {registry_path}")
+            return {}
+        except json.JSONDecodeError:
+            print(f"Invalid JSON in registry file at {registry_path}")
+            return {}
 
     async def execute_workflow(self, workflow: WorkflowDefinition,
                                param_validation: ParameterValidationResult) -> ExecutionResult:
@@ -247,33 +264,39 @@ class ActionModule:
         Returns:
             Dict[str, Any]: Prepared parameters for the step
         """
-        # Start with the parameters defined in the step
-        parameters = dict(step.parameters) if step.parameters else {}
+        params = step.parameters or {}
+        if not params:  # No parameters defined for this step
+            return {}
 
-        # For the first step, include input parameters from the workflow
+        # If any required parameter has an empty value, abort early
+        if any(not info["value"] for info in params.values()):
+            return {}
+
+        # if step_index == 0, return all parameters
         if step_index == 0:
-            # Add any workflow input parameters that match this step's parameter names
-            for param_name, param_value in context["parameters"].items():
-                if param_name in parameters:
-                    parameters[param_name] = param_value
+            return {name: info["value"] for name, info in params.items()}
 
-        # For subsequent steps, include output from previous step
-        else:
-            previous_output = context["previous_step_output"]
-            if previous_output:
-                # If previous output is a dict, check for matching parameter names
-                if isinstance(previous_output, dict):
-                    for param_name, param_value in previous_output.items():
-                        if param_name in parameters:
-                            parameters[param_name] = param_value
-                # If previous output is not a dict but step has a primary input parameter,
-                # use the entire output as the value for that parameter
-                elif len(parameters) == 1:
-                    # Assume the single parameter is the primary input
-                    primary_param = next(iter(parameters))
-                    parameters[primary_param] = previous_output
+        # Check if the previous step's output type matches any parameter type
+        prev_output_type = type(context.get("previous_step_output"))
+        has_match = False
+        result = {}
 
-        return parameters
+        for name, info in params.items():
+            param_type = info.get("type")
+            if param_type and param_type == str(prev_output_type):
+                has_match = True
+                result[name] = context.get("previous_step_output")
+            else:
+                # Use the parameter value directly
+                result[name] = info["value"]
+
+        if not has_match:
+            return {}
+
+        logger.info("parameters prepared for step: %s", step.step_id)
+
+        return result
+
 
     async def _execute_step(self, step: WorkflowStep, parameters: Dict[str, Any]) -> Any:
         """
