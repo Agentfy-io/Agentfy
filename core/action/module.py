@@ -323,7 +323,7 @@ class ActionModule:
                 # Dynamic import based on agent ID
                 # Format: platform_category (e.g., tiktok_crawler, twitter_analysis)
                 platform, category = agent_id.split("_")
-                module_path = f"...agents.{platform}.{category}"
+                module_path = f"agents.{platform}.{category}"
                 agent_module = importlib.import_module(module_path, package=__name__)
 
                 # Find the function
@@ -331,12 +331,15 @@ class ActionModule:
                     raise StepExecutionError(f"Function {function_id} not found in {module_path}")
 
                 function = getattr(agent_module, function_id)
+                args = {k: v for k, v in parameters.items() if v not in [None, ""]}
 
                 # Check if function is async
                 if inspect.iscoroutinefunction(function):
-                    result = await function(**parameters)
+                    result = await function(**args)
                 else:
-                    result = function(**parameters)
+                    result = function(**args)
+
+                logger.info(f"Function {function_id} executed successfully")
 
                 return result
 
