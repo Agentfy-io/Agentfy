@@ -7,6 +7,11 @@ from common.models.messages import UserInput, UserMetadata
 from core.memory.module import MemoryModule
 from core.reasoning.module import ReasoningModule
 from core.perception.module import PerceptionModule
+from core.action.module import ActionModule
+from common.utils.logging import setup_logger
+
+# Set up logger
+logger = setup_logger(__name__)
 
 
 # Load agent registry
@@ -30,6 +35,7 @@ async def process_user_input(user_input_text: str) -> Dict[str, Any]:
         memory_module = MemoryModule()
         reasoning_module = ReasoningModule()
         perception_module = PerceptionModule()
+        action_module = ActionModule()
 
         # 2. Create a user input object
         user_input = UserInput(
@@ -57,18 +63,20 @@ async def process_user_input(user_input_text: str) -> Dict[str, Any]:
             # 6. get agents registry
             agents_registry = await get_agent_registry()
 
-            # 7. get workflow definition
+            # 7. create a workflow definition and parameters
             workflow_definition, param_result = await reasoning_module.analyze_request_and_build_workflow(
                 user_input_text,
                 agents_registry,
                 chat_history
             )
             # 8. Execute the workflow
+            execution_result = await action_module.execute_workflow(
+                workflow_definition,
+                param_result,
+            )
 
             # 9. Store the results in memory
-
-            return {"success": True, "workflow": workflow_definition.workflow_id, "params": param_result.is_valid}
-
+            return {"success": True, "workflow": workflow_definition.to_dict(), "execution_result": execution_result.to_dict()}
     except Exception as e:
         print(f"Error processing user input: {str(e)}")
         return {"success": False, "error": str(e)}
@@ -77,13 +85,24 @@ async def process_user_input(user_input_text: str) -> Dict[str, Any]:
 async def main():
     user_input_list = [
         "dm users who are interested in supporting donald trump on X, and this is the message i want to dm them: 'hey, i am a big fan of donald trump and i want to support him in the upcoming elections. do you want to join me?'",
+        # "Get the list of users tweeting positively about AI art and extract their follower counts, bios, and locations."
+        # "Retweet any positive tweets about ‘USC Marshall’ today.",
+        # "Post this tweet :‘AI is eating the world!’",
+        # "What are the trending topics in Canada right now, and which ones are tech-related?",
+        # "Get all users who liked Elon Musk’s last 10 tweets and DM them this message: ‘We are building a fan group—want in?",
+        # "Find users on X talking about buying skincare products and DM them: ‘Hey! I just launched a clean skincare line — want a free sample?",
+        # "Track trending products on X by checking what users are buying or recommending today in electronics."
     ]
 
     results = []
     for input_text in user_input_list:
         result = await process_user_input(input_text)
         results.append(result)
-        print(f"Result: {json.dumps(result, indent=2)}")
+        #print(f"Result: {json.dumps(result, indent=2)}")
+
+    # save as json
+    with open("results.json", "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=4)
 
     return results
 
