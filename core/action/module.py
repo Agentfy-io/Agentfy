@@ -121,12 +121,11 @@ class ActionModule:
                 "start_time": start_time
             }
 
-            logger.info(f"Executing workflow: {workflow_id}")
 
             # Execute each step in sequence
             for step_index, step in enumerate(workflow.steps):
                 step_id = step.step_id
-                logger.info(f"Executing step {step_index + 1}/{len(workflow.steps)}: {step_id}")
+                logger.info(f"🔧➡️ Executing step {step_index + 1}/{len(workflow.steps)}: {step_id}...")
 
                 try:
                     # Prepare parameters for this step
@@ -164,13 +163,14 @@ class ActionModule:
                     # Update context and tracking
                     context["step_results"][step_id] = full_step_result
                     context["previous_step_output"] = step_result
+                    context["previous_step_output_type"] = step.return_type['type']
                     step_results[step_id] = full_step_result
 
                     # Update totals
                     total_api_calls += full_step_result.metrics.api_calls
                     total_data_processed += full_step_result.metrics.data_processed
 
-                    logger.info(f"Step {step_id} completed successfully")
+                    logger.info(f"{step_id} completed successfully")
 
                 except Exception as e:
                     logger.error(f"Error executing step {step_id}: {str(e)}")
@@ -268,32 +268,38 @@ class ActionModule:
         if not params:  # No parameters defined for this step
             return {}
 
-        # If any required parameter has an empty value, abort early
-        if any(not info["value"] for info in params.values()):
-            return {}
-
-        # if step_index == 0, return all parameters
+        # if step_index == 0, check if all required parameters are provided
         if step_index == 0:
+            if any(not info["value"] for info in params.values()):
+                return {}
             return {name: info["value"] for name, info in params.items()}
 
-        # Check if the previous step's output type matches any parameter type
-        prev_output_type = type(context.get("previous_step_output"))
+        # if step_index > 0, check if previous step output can be found in params
         has_match = False
         result = {}
 
         for name, info in params.items():
             param_type = info.get("type")
-            if param_type and param_type == str(prev_output_type):
+            prev_output = context.get("previous_step_output")
+            # logger.info(f"Preparing parameter: {name} with type: {param_type}, value: {info['value']}, previous output type: {type(prev_output)}")
+
+            if param_type and param_type == str(type(prev_output)):
                 has_match = True
-                result[name] = context.get("previous_step_output")
+                result[name] = prev_output
+
+            elif param_type and param_type.startswith("List[") and isinstance(prev_output, list):
+                has_match = True
+                result[name] = prev_output
+
+            elif param_type and param_type.startswith("Dict[") and isinstance(prev_output, dict):
+                has_match = True
+                result[name] = prev_output
+
             else:
-                # Use the parameter value directly
                 result[name] = info["value"]
 
         if not has_match:
             return {}
-
-        logger.info("parameters prepared for step: %s", step.step_id)
 
         return result
 
