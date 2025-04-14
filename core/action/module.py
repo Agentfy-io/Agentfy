@@ -270,7 +270,7 @@ class ActionModule:
 
         # if step_index == 0, check if all required parameters are provided
         if step_index == 0:
-            if any(not info["value"] for info in params.values()):
+            if any(not info["value"] and info["is_required"] for info in params.values()):
                 return {}
             return {name: info["value"] for name, info in params.items()}
 
