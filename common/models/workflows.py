@@ -86,7 +86,7 @@ class WorkflowStep(BaseModel):
     function_id: str
     description: str
     parameters: Dict[str, Any] = None
-    return_type: Optional[str] = None
+    return_type: Optional[Dict[str, Any]] = None
     conditional_execution: Optional[Dict[str, Any]] = None
     retry_policy: Optional[Dict[str, Any]] = None
     on_success: Optional[List[str]] = None

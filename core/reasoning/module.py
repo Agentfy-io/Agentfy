@@ -14,8 +14,7 @@ from common.ais.chatgpt import ChatGPT
 from common.models.messages import ChatMessage
 from config import settings
 from common.exceptions.exceptions import AnalysisError, ChatGPTAPIError
-from common.models.workflows import WorkflowDefinition, MissingParameter, ParameterConflict, WorkflowStep, Parameter, \
-    ParameterValidationResult
+from common.models.workflows import WorkflowDefinition, MissingParameter,  ParameterConflict, WorkflowStep, Parameter, ParameterValidationResult
 from common.utils.logging import setup_logger
 
 # Set up logger
@@ -33,12 +32,13 @@ class ReasoningModule:
         self.config = settings
         self.chatgpt = ChatGPT()
 
+
+
     async def analyze_request_and_build_workflow(self,
                                                  user_request: str,
                                                  agent_registry: Dict[str, Any],
                                                  chat_history: List[ChatMessage] = None,
-                                                 existing_workflow: Dict[str, Any] = None) -> Tuple[
-        WorkflowDefinition, ParameterValidationResult]:
+                                                 existing_workflow: Dict[str, Any] = None) -> Tuple[WorkflowDefinition, ParameterValidationResult]:
         """
         Analyze user request and build workflow using ChatGPT.
         Handles both new requests and parameter updates for existing workflows.
@@ -59,7 +59,7 @@ class ReasoningModule:
         """
         try:
             if existing_workflow:
-                logger.info("Analyzing parameter update for existing workflow")
+                logger.info("🤖🔍Analyzing parameter update for existing workflow...")
                 # This is a parameter update for an existing workflow
                 workflow_data = await self._update_workflow_parameters(
                     user_request,
@@ -67,7 +67,7 @@ class ReasoningModule:
                     agent_registry
                 )
             else:
-                logger.info("Analyzing new user request")
+                logger.info("🤖🔍Analyzing new user request....")
                 # This is a new request
                 workflow_data = await self._create_new_workflow(
                     user_request,
@@ -119,7 +119,8 @@ class ReasoningModule:
 
         # extract workflow data
         workflow = workflow['response']["choices"][0]["message"]["content"].strip()
-        workflow = re.sub(r'//.*?(\n|$)', '\n', workflow)
+        workflow = re.sub(r"^```(?:json)?\s*", "", workflow)
+        workflow = re.sub(r"\s*```$", "", workflow)
         workflow = json.loads(workflow)
         return workflow
 
@@ -165,12 +166,13 @@ class ReasoningModule:
         2. Identify the appropriate agents and functions needed to fulfill the request
         3. ⚠️ Very Important: If the workflow includes any **crawler functions** (functions under an agent with ID containing "crawler"),
         you **must** add a **cleaning step** of required platform right after it using an available analysis function (e.g., `clean_data`).
-        The cleaning step should extract the relevant fields needed for the next action, such as user_id, tweet content, etc.
+        The cleaning step should extract the relevant fields needed for the next action, such as user_id, tweet content, etc. 
         4. Make sure that any function that depends on specific parameters only receives data that has been explicitly prepared in prior steps.
         5. If the values of the parameters are from the previous steps, please leave them empty.
         6. Create a workflow with the necessary steps in the correct logical order.
         7. Identify any missing parameters needed only for the first step of the workflow.
-        8. If there are any parameter conflicts (in the first step only), include them in the `parameter_conflicts` array.
+        8. If there are any parameter conflicts (in the first step only), include them in the `parameter_conflicts` array.\
+        9. If there's cleaning step, edit the value of next_step to describe the essential input parameter(s) of the next step, including name and type.
 
 
         Return ONLY a JSON object with the following structure:
@@ -187,14 +189,18 @@ class ReasoningModule:
                     "parameters": {{
                         "param1": {{
                             "type": "" //from agent_registry,
-                            "value": "value1"  // Leave empty if from previous step
+                            "value": value1  // Leave empty if from previous step
                         }}
                         "param2": {{
                             "type": "" //from agent_registry,
-                            "value": "value2"  // Leave empty if from previous step
+                            "value": value2  // Leave empty if from previous step
                         }}
+                        ..... // Add more parameters as needed
                     }},
-                    "return_type": "Dict"
+                    "return_type": {{
+                        "type": "Dict",
+                        "description": "Description of the return type"
+                    }}
                 }},
             ],
             "missing_parameters": [
@@ -335,7 +341,7 @@ class ReasoningModule:
                 function_id=step_data.get("function_id", ""),
                 description=step_data.get("description", ""),
                 parameters=step_data.get("parameters", {}),
-                return_type=step_data.get("return_type", "Dict"),
+                return_type=step_data.get("return_type", {}),
             )
             steps.append(step)
 
@@ -371,7 +377,7 @@ class ReasoningModule:
 
         return missing_params
 
-    def _extract_parameter_conflicts(self, workflow_data) -> List[ParameterConflict]:
+    def _extract_parameter_conflicts(self, workflow_data)-> List[ParameterConflict]:
         """Extract parameter conflicts from workflow data."""
         conflicts = []
 
