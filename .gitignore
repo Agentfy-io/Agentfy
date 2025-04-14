@@ -15,3 +15,8 @@
 /core/memory/__pycache__
 /core/reasoning/__pycache__
 /logs
+/core/action/__pycache__
+/agents/x/__pycache__
+/agents/__pycache__
+/agents/x/logs
+/.idea
