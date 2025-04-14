@@ -6,48 +6,67 @@ Agentfy is a modular microservices architecture designed to process user request
 
 ## 🚦 Development Getting Started
 
+# Installation and Setup
+
 1. Clone the repository
 2. Install dependencies: `pip install -r requirements.txt`
-3. Create or Update `agent_registry.json` file with available agents and functions (Optional)
+3. Create or Update `agent_registry.json` file with available sub-agents and functions (Optional)
    - Example:
      ```json
      {
-       "agents": [
-         {
-           "name": "agent_name",
-           "description": "Agent description",
-           "functions": [
+       "AGENT_REGISTRY": {
+         "platform_name": {
+           "crawlers": [
              {
-               "name": "function_name",
-               "description": "Function description"
+               "agent_id": "agent_name",
+               "function_id": "function_name",
+               "description": "Function description",
+               "parameters": [
+                 {
+                   "name": "para1_name",
+                   "type": "para1_type",
+                   "description": "para1 description",
+                   "required": true
+                 },
+                 {
+                   "name": "para2_type",
+                   "type": "para2_type",
+                   "description": "para2 description",
+                   "required": false
+                 }
+               ],
+               "returns": {
+                 "type": "return_type",
+                 "description": "Return value description"
+               }
              }
            ]
          }
-       ]
+       }
      }
      ```
-4. Set environment variables or update `config.py`
-5. Run the API: `uvicorn main:app --reload` or `python main.py` or `python3 main.py`
-
-## ➕ If You Need to Add New Sub Agents....
-
-1. Create a new directory under `agents/` for the platform
-2. Implement agent functions in appropriate files (crawler, analysis, interactive)
-3. Add agent definitions to the agent registry JSON
-4. The system will automatically incorporate these into workflows when appropriate
-
+4. Set environment variables `.env` or update `config.py` (optional)
+5. Run the Sample Test: `python main_test.py` or `python3 main_test.py`, you may change the `user_input_list` in `main_test.py` to test different inputs
+   - Example:
+     ```python
+     user_input_list = [
+         "Post this tweet :‘AI is eating the world!’",
+         "What are the trending topics in Canada right now, and which ones are tech-related?",
+     ]
+     ```
+6. IMPORTANT: some interactive agents may require additional setup, if there's an error during execution, please ignore it for now, as the system is still in development.
 
 ## 🏗️ System Architecture
 
 ```
 Agentfy/
 ├── core/                    # Core system components
-│   ├── perception/             # Input validation & output formatting
-│   ├── memory/                 # Data persistence & retrieval
-│   ├── reasoning/              # Request analysis & workflow planning
-│   ├── action/                 # Workflow execution
-│   ├── monitoring/             # Execution monitoring (optional)
-│   └── communication/          # Inter-agent communication (optional)
+│   ├── perception/             # Input validation & output formatting (partially complete)
+│   ├── memory/                 # Data persistence & retrieval (partially complete)
+│   ├── reasoning/              # Request analysis & workflow planning (partially complete)
+│   ├── action/                 # Workflow execution (partially complete)
+│   ├── monitoring/             # Execution monitoring (Under Development, Not Available)
+│   └── communication/          # Inter-agent communication (Under Development, Not Available)
 ├── common/                  # Shared utilities 
 │   ├── ais/                    # ai utilities, e.g., wrapper class for ChatGPT, Claude, DeepSeek
 │   ├── models/                 # models for data structures, design for communication between modules, e.g., messages, workflows, users
@@ -62,7 +81,9 @@ Agentfy/
 ├── agents_registry.json     # Agent registry for available agents and functions
 ├── requirements.txt         # Python dependencies
 ├── README.md                # Documentation
-└── main.py                  # Main entry point for Agentfy, for testing and development
+├── main_test.md             # Sample test file for running the system
+└── main.py                  # Main entry point for Agentfy (still in development, don't use it yet, use `main_test.py` instead)
+
 ```
 
 ## 🧩 Core Modules
@@ -132,7 +153,15 @@ Each social media platform has its own set of agents divided into categories:
 2. **Analysis**: Data processing and insights generation
 3. **Interactive**: Actions that interact with social platforms
 
-## 🌐 FastAPI Integration
+## ➕ If You Need to Add New Sub Agents....
+
+1. Create a new directory under `agents/` for the platform
+2. Implement agent functions in appropriate files (crawler, analysis, interactive)
+3. Add agent definitions to the agent registry JSON
+4. The system will automatically incorporate these into workflows when appropriate
+
+
+## 🌐 FastAPI Integration (Under Development, Not Yet Complete)
 
 The `main.py` file integrates all modules into a cohesive API with these endpoints:
 

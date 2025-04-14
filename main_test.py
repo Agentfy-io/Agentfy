@@ -87,8 +87,6 @@ async def main():
         "dm users who are interested in supporting donald trump on X, and this is the message i want to dm them: 'hey, i am a big fan of donald trump and i want to support him in the upcoming elections. do you want to join me?'",
         # "Get the list of users tweeting positively about AI art and extract their follower counts, bios, and locations."
         # "Retweet any positive tweets about ‘USC Marshall’ today.",
-        # "Post this tweet :‘AI is eating the world!’",
-        # "What are the trending topics in Canada right now, and which ones are tech-related?",
         # "Get all users who liked Elon Musk’s last 10 tweets and DM them this message: ‘We are building a fan group—want in?",
         # "Find users on X talking about buying skincare products and DM them: ‘Hey! I just launched a clean skincare line — want a free sample?",
         # "Track trending products on X by checking what users are buying or recommending today in electronics."
