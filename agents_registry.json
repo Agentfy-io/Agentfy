@@ -84,7 +84,7 @@
         {
           "agent_id": "x_crawler",
           "function_id": "fetch_user_followers",
-          "description": "Fetch raw followers data of a specific user",
+          "description": "Fetch each raw follower information of a specific user",
           "parameters": [
             {
               "name": "screen_name",
@@ -133,7 +133,7 @@
       "analysis": [
         {
           "agent_id": "x_analysis",
-          "function_id": "clean_data",
+          "function_id": "clean_raw_data",
           "description": "Cleans and filters raw Twitter (X) data based on user intent by selecting only relevant fields.",
           "parameters": [
             {
@@ -147,76 +147,82 @@
               "type": "str",
               "description": "A natural language request describing what kind of data or fields the user is interested in.",
               "required": true
+            },
+            {
+              "name": "next_step",
+              "type": "str",
+              "description": "description tha contain teh essential parameters for the next step in the workflow.",
+              "required": false
             }
           ],
           "returns": {
-            "type": "List[Dict]",
-            "description": "Cleaned tweet data containing only the fields relevant to the user's request."
+            "type": "List[Any]",
+            "description": "Cleaned tweet data containing only the field or fields relevant to the user's request."
           }
         }
       ],
       "interactive": [
         {
           "agent_id": "x_interactive",
-          "function_id": "post_tweet",
-          "description": "Post a new tweet to X (Twitter)",
+          "function_id": "post_tweets",
+          "description": "Post a list of text-based tweets on X (Twitter)",
           "parameters": [
             {
-              "name": "message",
+              "name": "messages",
               "type": "List[str]",
-              "description": "A list of text content for the tweet (max 280 characters)",
+              "description": "A list of text content for the tweet (max 280 characters for each)",
               "required": true
             }
           ],
           "returns": {
-            "type": "Dict",
-            "description": "Result of posting the tweet including status and tweet ID"
+            "type": "bool",
+            "description": "True if all tweets were posted successfully, False otherwise."
           }
         },
         {
           "agent_id": "x_interactive",
-          "function_id": "upload_media_and_post",
-          "description": "Upload media and post a tweet with it",
+          "function_id": "upload_media_and_posts",
+          "description": "Post a list of tweets with media (images/videos) on X (Twitter)",
           "parameters": [
             {
-              "name": "message",
-              "type": "str",
-              "description": "The text content of the tweet (max 280 characters)",
+              "name": "messages",
+              "type": "List[str]",
+              "description": "A list of text content for the tweet (max 280 characters for each)",
               "required": true
             },
             {
-              "name": "media_path",
-              "type": "str",
-              "description": "Path to the media file to upload",
+              "name": "media_paths",
+              "type": "List[str]",
+              "description": "List of file paths to media files (images/videos) to be uploaded with the tweets",
               "required": true
             }
           ],
           "returns": {
-            "type": "Dict",
-            "description": "Result of posting the tweet with media including status and tweet ID"
+            "type": "bool",
+            "description": "True if all tweets with media were posted successfully, False otherwise."
           }
         },
         {
           "agent_id": "x_interactive",
-          "function_id": "delete_tweet",
-          "description": "Delete a tweet with the specified ID",
+          "function_id": "delete_tweets",
+          "description": "Delete a list of tweets with the specified IDs",
           "parameters": [
             {
-              "name": "tweet_id",
-              "type": "str",
+              "name": "tweet_ids",
+              "type": "List[str]",
               "description": "The ID of the tweet to delete",
               "required": true
             }
           ],
           "returns": {
-            "type": "Dict",
-            "description": "Result of the tweet deletion operation"
+            "type": "bool",
+            "description": "Result of the delete operation"
           }
         },
         {
           "agent_id": "x_interactive",
-          "function_id": "send_direct_message",
-          "description": "Send a direct message to a user on X (Twitter)",
+          "function_id": "send_dm",
+          "description": "Send the same direct message to multiple recipients.",
           "parameters": [
             {
               "name": "recipient_ids",
@@ -232,19 +238,19 @@
             }
           ],
           "returns": {
-            "type": "Dict",
+            "type": "bool",
             "description": "Result of sending the direct message"
           }
         },
         {
           "agent_id": "x_interactive",
-          "function_id": "reply_to_tweet",
-          "description": "Reply to an existing tweet on X (Twitter)",
+          "function_id": "reply_to_tweets",
+          "description": "Reply to a list of tweets with the specified IDs",
           "parameters": [
             {
-              "name": "tweet_id",
-              "type": "str",
-              "description": "The ID of the tweet to reply to",
+              "name": "tweet_ids",
+              "type": "List[str]",
+              "description": "List of tweet IDs to reply to",
               "required": true
             },
             {
@@ -255,75 +261,75 @@
             }
           ],
           "returns": {
-            "type": "Dict",
+            "type": "bool",
             "description": "Result of posting the reply including status and tweet ID"
           }
         },
         {
           "agent_id": "x_interactive",
-          "function_id": "follow_user",
+          "function_id": "follow_users",
           "description": "Follow a user with the specified ID",
           "parameters": [
             {
-              "name": "target_user_id",
-              "type": "str",
-              "description": "The ID of the user to follow",
+              "name": "user_ids",
+              "type": "List[str]",
+              "description": "List of user IDs to follow",
               "required": true
             }
           ],
           "returns": {
-            "type": "Dict",
+            "type": "bool",
             "description": "Result of the follow operation"
           }
         },
         {
           "agent_id": "x_interactive",
-          "function_id": "like_tweet",
-          "description": "Like a tweet with the specified ID",
+          "function_id": "like_tweets",
+          "description": "Like a list of tweets with the specified IDs",
           "parameters": [
             {
-              "name": "tweet_id",
-              "type": "str",
-              "description": "The ID of the tweet to like",
+              "name": "tweet_ids",
+              "type": "List[str]",
+              "description": "List of tweet IDs to like",
               "required": true
             }
           ],
           "returns": {
-            "type": "Dict",
+            "type": "bool",
             "description": "Result of the like operation"
           }
         },
         {
           "agent_id": "x_interactive",
-          "function_id": "unlike_tweet",
-          "description": "Unlike a tweet with the specified ID",
+          "function_id": "unlike_tweets",
+          "description": "Unlike a list of tweets with the specified IDs",
           "parameters": [
             {
-              "name": "tweet_id",
-              "type": "str",
-              "description": "The ID of the tweet to unlike",
+              "name": "tweet_ids",
+              "type": "List[str]",
+              "description": "List of tweet IDs to unlike",
               "required": true
             }
           ],
           "returns": {
-            "type": "Dict",
+            "type": "bool",
             "description": "Result of the unlike operation"
           }
         },
         {
           "agent_id": "x_interactive",
-          "function_id": "retweet",
-          "description": "Retweet a tweet with the specified ID",
+          "function_id": "retweet_tweets",
+          "description": "Retweet a list of tweets with the specified IDs",
           "parameters": [
             {
-              "name": "tweet_id",
-              "type": "str",
-              "description": "The ID of the tweet to retweet",
+              "name": "tweet_ids",
+              "type": "List[str]",
+              "description": "List of tweet IDs to retweet",
               "required": true
             }
           ],
           "returns": {
-            "type": "Dict",
+            "type": "bool",
             "description": "Result of the retweet operation"
           }
         }
