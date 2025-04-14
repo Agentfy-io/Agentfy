@@ -1,78 +1,71 @@
-import requests
-import time
-from typing import Dict, List, Optional, Union, Any
 import json
-from config import settings
+import pandas as pd
+from typing import List, Dict, Any
+
 from common.ais.chatgpt import ChatGPT
 from common.utils.logging import setup_logger
-import pandas as pd
 
-# Set up logger
 logger = setup_logger(__name__)
 
 
-class XCleaner:
+async def clean_raw_data(user_request: str, tweet_data: List[Dict], next_step: str ) -> List[Any]:
     """
-    A class for cleaning and processing X data.
-    raw_data = [{....},{...}....] (Dict)
+    Clean raw tweet data based on user's request using GPT to select relevant keys.
 
-    raw_data ---> panda dataframe
+    Args:
+        user_request: User's request for data cleaning.
+        tweet_data: Raw tweet data (list of dictionaries).
+        next_step: The next step in the workflow that requires specific parameters.
 
-    list_keys = panda_dataframe.cols (提取所有的键）['user_id', 'tweet_id'.....]
-
-    required_keys  = chatgpt (user_request, list_keys)
-
-    cleaned_data = raw_data[keys] (panda)
-
-    TODO
-    1. 将raw data从list of dict转换成panda，
-    2. 使用panda内置方法提取keys，存储再一个list里面
-    3. 使用gpt来分析需要那些keys
-    4. 使用panda和提取的keys来清洗，并且返回下一步所需要的数据
-
+    Returns:
+        Cleaned data (list of dictionaries with only relevant keys).
     """
-    def __init__(self):
-        """
-        Initialize the XCleaner.
-        """
-        self.chatgpt = ChatGPT()
+    # Convert raw data to DataFrame, make sure nested structures are flattened
+    try:
+        df = pd.json_normalize(tweet_data)
+    except Exception as e:
+        logger.error(f"Failed to create DataFrame: {e}")
+        return []
 
-    async def clean_raw_data(self, user_request:str, tweet_data: List[Dict]) -> List[Any]:
-        """
-        Clean and process the data.
+    # Get the list of keys (columns) in the DataFrame
+    list_keys = df.columns.tolist()
 
-        Args:
-            user_request: User's request for data cleaning.
-            data: List of dictionaries containing tweet data.
+    # Generate GPT prompts
+    system_prompt = (
+        "You are a data cleaning assistant. Your task is to determine which key(s) from tweet data are needed for the next step in a processing workflow. "
+        "You will be given: (1) a user request, (2) a list of available keys from the data, and (3) a dictionary describing the next step and its expected parameters. "
+        "Select only the key or keys that are relevant to both the user’s intent and the requirements of the next step. "
+        "Determine how many keys to select based on the type of the next step’s parameter: "
+        "if it expects a List[str] or List[int] or List[bool] or List[float], then select one key; "
+        "if it expects a List[Dict], then select multiple keys corresponding to fields in the dict. "
+        "Your response must be a pure JSON list of the selected keys, with no explanations or extra text."
+    )
 
-        Returns:
-            Cleaned data as a list of dictionaries.
-        """
-        # Convert raw data to pandas DataFrame
-        logger.info("starting to clean data")
-        df = pd.DataFrame(tweet_data)
-        list_keys = df.columns.tolist()
-        logger.info(f"Extracted keys from data: {list_keys}")
-        # let chatgpt clean the data based on user_request
-        system_prompt = (
-            "You are a data preprocessing assistant specialized in cleaning structured data. "
-            "Given a user's intent and a list of column names (keys), your task is to decide which keys are relevant for further analysis. "
-            "You will not clean the actual values, only determine the subset of keys to retain. "
-            "Output a JSON list of relevant keys based strictly on the user request. "
-            "Do not add explanation or extra text—only return the JSON list."
-        )
-        user_prompt = (
-            f"The user wants to clean and filter tweet data with the following intent:\n\n"
-            f"{user_request}\n\n"
-            f"Here are the available keys in the data:\n{list_keys}\n\n"
-            f"Please return a JSON array (e.g., [\"key1\", \"key2\"]) containing only the keys relevant to the user's request."
-        )
+    user_prompt = (
+        f"User request: {user_request}\n\n"
+        f"Available keys: {list_keys}\n\n"
+        f"Next step and required parameters: {next_step}\n\n"
+        f"Please return a JSON array (e.g., [\"key1\", \"key2\"]) of relevant key or keys."
+    )
 
-        response = await self.chatgpt.chat(system_prompt, user_prompt)
+    # Call GPT
+    chatgpt = ChatGPT()
+    response = await chatgpt.chat(system_prompt, user_prompt)
+    content = response['response']["choices"][0]["message"]["content"].strip()
 
-        tweet_data = response['response']["choices"][0]["message"]["content"].stripe()
-        tweet_data = json.loads(tweet_data)
+    try:
+        relevant_keys = json.loads(content)
+        logger.info(f"GPT selected keys: {relevant_keys}")
+    except json.JSONDecodeError:
+        logger.error("Failed to parse GPT response as JSON list")
+        return []
 
-        return tweet_data
+    # Return cleaned data
+    if len(relevant_keys) == 1:
+        # Return a list of strings for the single relevant key
+        cleaned_df = df[relevant_keys[0]].fillna("").astype(str).tolist()
+    else:
+        # Return a list of dicts with only relevant keys
+        cleaned_df = df[relevant_keys].fillna("").to_dict(orient="records")
 
-
+    return cleaned_df
