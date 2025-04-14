@@ -6,7 +6,7 @@
 """
 import json
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 import uuid
 from datetime import datetime
 
@@ -155,8 +155,7 @@ class ReasoningModule:
 
     def _create_system_message(self, agent_registry: Dict[str, Any]) -> str:
         """Create the system message with agent registry for ChatGPT."""
-        return f"""
-        You are an AI assistant that analyzes user requests and creates workflows using available agents.
+        return f"""You are an AI assistant that analyzes user requests and creates workflows using available agents.
 
         You have access to the following agents and their functions:
         {json.dumps(agent_registry, indent=2)}
@@ -166,13 +165,14 @@ class ReasoningModule:
         2. Identify the appropriate agents and functions needed to fulfill the request
         3. ⚠️ Very Important: If the workflow includes any **crawler functions** (functions under an agent with ID containing "crawler"),
         you **must** add a **cleaning step** of required platform right after it using an available analysis function (e.g., `clean_data`).
-        The cleaning step should extract the relevant fields needed for the next action, such as user_id, tweet content, etc. 
+        The cleaning step should extract the relevant fields needed for the next action.
         4. Make sure that any function that depends on specific parameters only receives data that has been explicitly prepared in prior steps.
         5. If the values of the parameters are from the previous steps, please leave them empty.
         6. Create a workflow with the necessary steps in the correct logical order.
         7. Identify any missing parameters needed only for the first step of the workflow.
         8. If there are any parameter conflicts (in the first step only), include them in the `parameter_conflicts` array.\
         9. If there's cleaning step, edit the value of next_step to describe the essential input parameter(s) of the next step, including name and type.
+        10. if the clean step is the last step, set the next_step to None.
 
 
         Return ONLY a JSON object with the following structure:
@@ -190,10 +190,12 @@ class ReasoningModule:
                         "param1": {{
                             "type": "" //from agent_registry,
                             "value": value1  // Leave empty if from previous step
+                            "is_required": true/false
                         }}
                         "param2": {{
                             "type": "" //from agent_registry,
                             "value": value2  // Leave empty if from previous step
+                            "is_required": true/false
                         }}
                         ..... // Add more parameters as needed
                     }},
@@ -242,10 +244,18 @@ class ReasoningModule:
         You are an AI assistant that updates workflow parameters based on user input and existing workflows.
 
         Your task is to:
-        1. Analyze the user's input to match the missing parameters for the first step (step 1) of the workflow
-        2. check if the missing parameters provided by user are valid (e.g., type, required)
-        3. If the parameters are valid, Update the existing workflow by applying these parameter values to step 1
-        4. If any parameters are still missing or invalid, include them in the missing_parameters array
+        1. Understand the user's request
+        2. Identify the appropriate agents and functions needed to fulfill the request
+        3. ⚠️ Very Important: If the workflow includes any **crawler functions** (functions under an agent with ID containing "crawler"),
+        you **must** add a **cleaning step** of required platform right after it using an available analysis function (e.g., `clean_data`).
+        The cleaning step should extract the relevant fields needed for the next action.
+        4. Make sure that any function that depends on specific parameters only receives data that has been explicitly prepared in prior steps.
+        5. If the values of the parameters are from the previous steps, please leave them empty.
+        6. Create a workflow with the necessary steps in the correct logical order.
+        7. Identify any missing parameters needed only for the first step of the workflow.
+        8. If there are any parameter conflicts (in the first step only), include them in the `parameter_conflicts` array.\
+        9. If there's cleaning step, edit the value of next_step to describe the essential input parameter(s) of the next step, including name and type.
+        10. if the clean step is the last step, set the next_step to None.
 
         Return ONLY a JSON object with the following structure:
         {{
@@ -261,14 +271,20 @@ class ReasoningModule:
                     "parameters": {{
                         "param1": {{
                             "type": "" //from agent_registry,
-                            "value": "value1"  // Leave empty if from previous step
+                            "value": value1  // Leave empty if from previous step
+                            "is_required": true/false
                         }}
                         "param2": {{
                             "type": "" //from agent_registry,
-                            "value": "value2"  // Leave empty if from previous step
+                            "value": value2  // Leave empty if from previous step
+                            "is_required": true/false
                         }}
+                        ..... // Add more parameters as needed
                     }},
-                    "return_type": "Dict"
+                    "return_type": {{
+                        "type": "Dict",
+                        "description": "Description of the return type"
+                    }}
                 }},
             ],
             "missing_parameters": [
@@ -299,9 +315,9 @@ class ReasoningModule:
             ]
         }}
 
-        FOCUS ONLY ON STEP 1 of the workflow. If all required parameters for step 1 have been provided, 
-        the missing_parameters array should be empty. If a parameter value provided by the user is still invalid, 
-        put in the parameter_conflicts array with a reason and resolution suggestion.
+        The workflow should be as efficient as possible, using only the necessary steps to complete the user's request.
+        If there are parameters missing that would be needed from the user, include them in the missing_parameters array.
+        If there are any parameter conflicts, include them in the parameter_conflicts array with a reason and resolution suggestion.
         """
 
     def _create_user_message(self, user_request: str, chat_history: List[Dict[str, Any]] = None) -> str:
