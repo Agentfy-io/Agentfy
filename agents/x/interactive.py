@@ -15,21 +15,17 @@ def get_api_credentials(api_key: Optional[str] = None, api_secret: Optional[str]
 
 
 async def get_user_access_tokens(api_key: str, api_secret: str) -> Tuple[Optional[str], Optional[str]]:
-    try:
-        auth = tweepy.OAuth1UserHandler(api_key, api_secret, callback="oob")
-        auth_url = auth.get_authorization_url()
-        logger.info("Please visit this URL to authorize the app:")
-        logger.info(auth_url)
-        webbrowser.open(auth_url)
+    auth = tweepy.OAuth1UserHandler(api_key, api_secret, callback="oob")
+    auth_url = auth.get_authorization_url()
+    logger.info("Please visit this URL to authorize the app:")
+    logger.info(auth_url)
+    webbrowser.open(auth_url)
 
-        pin = input("Enter the PIN you received after authorizing the app: ").strip()
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, lambda: auth.get_access_token(pin))
+    pin = input("Enter the PIN you received after authorizing the app: ").strip()
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, lambda: auth.get_access_token(pin))
 
-        return auth.access_token, auth.access_token_secret
-    except Exception as e:
-        logger.error(f"OAuth error: {str(e)}")
-        return None, None
+    return auth.access_token, auth.access_token_secret
 
 
 async def authenticate() -> Tuple[Optional[tweepy.Client], Optional[tweepy.API]]:
@@ -62,18 +58,14 @@ async def post_tweets(messages: List[str]) -> bool:
 
     client, _ = await authenticate()
     if not client:
-        return False
+        raise ValueError("X Authentication failed. Please check your credentials.")
     for message in messages:
         if len(message) > 280:
             logger.error("Tweet exceeds 280 characters.")
             continue
-        try:
-            loop = asyncio.get_running_loop()
-            response = await loop.run_in_executor(None, lambda: client.create_tweet(text=message))
-            logger.info(f"Tweet posted: ID {response.data['id']}")
-        except Exception as e:
-            logger.error(f"Post tweet error: {str(e)}")
-            return False
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(None, lambda: client.create_tweet(text=message))
+        logger.info(f"Tweet posted: ID {response.data['id']}")
     return True
 
 
@@ -90,22 +82,19 @@ async def upload_media_and_posts(messages: List[str], media_paths: List[str]) ->
 
     client, api_v1 = await authenticate()
     if not client or not api_v1:
-        return False
+        raise ValueError("X Authentication failed. Please check your credentials.")
     if len(messages) != len(media_paths):
         logger.error("Number of messages and media files do not match.")
-        return False
+        raise ValueError("Number of messages and media files do not match.")
     for message, media in zip(messages, media_paths):
         if len(message) > 280:
             logger.error("Tweet exceeds 280 characters.")
             continue
-        try:
-            loop = asyncio.get_running_loop()
-            media_response = await loop.run_in_executor(None, lambda: api_v1.media_upload(media))
-            response = await loop.run_in_executor(None, lambda: client.create_tweet(text=message, media_ids=[media_response.media_id]))
-            logger.info(f"Tweet posted with media: ID {response.data['id']}")
-        except Exception as e:
-            logger.error(f"Upload media and post error: {str(e)}")
-            return False
+        loop = asyncio.get_running_loop()
+        media_response = await loop.run_in_executor(None, lambda: api_v1.media_upload(media))
+        response = await loop.run_in_executor(None, lambda: client.create_tweet(text=message,
+                                                                                media_ids=[media_response.media_id]))
+        logger.info(f"Tweet posted with media: ID {response.data['id']}")
     return True
 
 async def delete_tweets(tweet_ids: List[str]) -> bool:
@@ -119,7 +108,7 @@ async def delete_tweets(tweet_ids: List[str]) -> bool:
     """
     client, _ = await authenticate()
     if not client:
-        return False
+        raise ValueError("X Authentication failed. Please check your credentials.")
     for tweet_id in tweet_ids:
         try:
             loop = asyncio.get_running_loop()
@@ -144,16 +133,12 @@ async def send_dm(recipient_ids: List[str], message: str) -> bool:
 
     client, _ = await authenticate()
     if not client:
-        return False
+        raise ValueError("X Authentication failed. Please check your credentials.")
     for recipient_id in recipient_ids:
-        try:
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None,
-                                       lambda: client.create_direct_message(participant_id=recipient_id, text=message))
-            logger.info(f"DM sent to {recipient_id}")
-        except Exception as e:
-            logger.error(f"DM error: {str(e)}")
-            return False
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None,
+                                   lambda: client.create_direct_message(participant_id=recipient_id, text=message))
+        logger.info(f"DM sent to {recipient_id}")
     return True
 
 
@@ -170,15 +155,11 @@ async def reply_to_tweets(tweet_ids: List[str], message: str) -> bool:
 
     client, _ = await authenticate()
     if not client:
-        return False
+        raise ValueError("X Authentication failed. Please check your credentials.")
     for tweet_id in tweet_ids:
-        try:
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, lambda: client.create_tweet(text=message, in_reply_to_tweet_id=tweet_id))
-            logger.info(f"Replied to tweet {tweet_id}")
-        except Exception as e:
-            logger.error(f"Reply error: {str(e)}")
-            return False
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, lambda: client.create_tweet(text=message, in_reply_to_tweet_id=tweet_id))
+        logger.info(f"Replied to tweet {tweet_id}")
     return True
 
 async def follow_users(user_ids: List[str]) -> bool:
@@ -192,15 +173,11 @@ async def follow_users(user_ids: List[str]) -> bool:
     """
     client, _ = await authenticate()
     if not client:
-        return False
+        raise ValueError("X Authentication failed. Please check your credentials.")
     for user_id in user_ids:
-        try:
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, lambda: client.follow_user(target_user_id=user_id))
-            logger.info(f"Followed user {user_id}")
-        except Exception as e:
-            logger.error(f"Follow error: {str(e)}")
-            return False
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, lambda: client.follow_user(target_user_id=user_id))
+        logger.info(f"Followed user {user_id}")
     return True
 
 
@@ -215,15 +192,11 @@ async def like_tweets(tweet_ids: List[str]) -> bool:
     """
     client, _ = await authenticate()
     if not client:
-        return False
+        raise ValueError("X Authentication failed. Please check your credentials.")
     for tweet_id in tweet_ids:
-        try:
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, lambda: client.like(tweet_id))
-            logger.info(f"Liked tweet {tweet_id}")
-        except Exception as e:
-            logger.error(f"Like error: {str(e)}")
-            return False
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, lambda: client.like(tweet_id))
+        logger.info(f"Liked tweet {tweet_id}")
     return True
 
 
@@ -238,30 +211,22 @@ async def unlike_tweets(tweet_ids: List[str]) -> bool:
     """
     client, _ = await authenticate()
     if not client:
-        return False
+        raise ValueError("X Authentication failed. Please check your credentials.")
     for tweet_id in tweet_ids:
-        try:
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, lambda: client.unlike(tweet_id))
-            logger.info(f"Unliked tweet {tweet_id}")
-        except Exception as e:
-            logger.error(f"Unlike error: {str(e)}")
-            return False
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, lambda: client.unlike(tweet_id))
+        logger.info(f"Unliked tweet {tweet_id}")
     return True
 
 
 async def retweet_tweets(tweet_ids: List[str]) -> bool:
     client, _ = await authenticate()
     if not client:
-        return False
+        raise ValueError("X Authentication failed. Please check your credentials.")
     for tweet_id in tweet_ids:
-        try:
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, lambda: client.retweet(tweet_id))
-            logger.info(f"Retweeted {tweet_id}")
-        except Exception as e:
-            logger.error(f"Retweet error: {str(e)}")
-            return False
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, lambda: client.retweet(tweet_id))
+        logger.info(f"Retweeted {tweet_id}")
     return True
 
 

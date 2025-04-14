@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+# import pandasai as pai
 from typing import List, Dict, Any
 
 from common.ais.chatgpt import ChatGPT
@@ -62,10 +63,14 @@ async def clean_raw_data(user_request: str, tweet_data: List[Dict], next_step: s
 
     # Return cleaned data
     if len(relevant_keys) == 1:
-        # Return a list of strings for the single relevant key
-        cleaned_df = df[relevant_keys[0]].fillna("").astype(str).tolist()
+        # find the type of the item of the list
+        item_type = type(df[relevant_keys[0]].iloc[0])
+        # Return a list of the first column with the correct type
+        cleaned_df = df[relevant_keys[0]].fillna("").astype(item_type).tolist()
     else:
         # Return a list of dicts with only relevant keys
         cleaned_df = df[relevant_keys].fillna("").to_dict(orient="records")
+
+    logger.info(f"Cleaned data: {cleaned_df}")
 
     return cleaned_df
