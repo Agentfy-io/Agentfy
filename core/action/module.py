@@ -9,7 +9,7 @@ import inspect
 import asyncio
 import json
 import os
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Union, Tuple, AsyncGenerator
 from datetime import datetime
 
 from pyasn1.type.univ import Boolean
@@ -52,7 +52,7 @@ class ActionModule:
             return {}
 
     async def execute_workflow(self, workflow: WorkflowDefinition,
-                               param_validation: ParameterValidationResult) -> ExecutionResult:
+                               param_validation: ParameterValidationResult) ->  AsyncGenerator[ExecutionResult, None]:
         """
         Execute a workflow of agent functions with proper parameter flow.
 
@@ -74,13 +74,13 @@ class ActionModule:
             # Check if all parameters are valid before starting
             if not param_validation.is_valid:
                 logger.warning(f"Cannot execute workflow {workflow_id}: Missing required parameters")
-                return ExecutionResult(
+                yield ExecutionResult(
                     workflow_id=workflow_id,
                     status="FAILED",
                     start_time=start_time,
                     end_time=datetime.utcnow(),
                     step_results={},
-                    outputs={},
+                    output={},
                     errors=[ExecutionError(
                         error_code="MISSING_PARAMETERS",
                         message="Cannot execute workflow due to missing parameters",
@@ -125,7 +125,14 @@ class ActionModule:
             # Execute each step in sequence
             for step_index, step in enumerate(workflow.steps):
                 step_id = step.step_id
-                logger.info(f"🔧➡️ Executing step {step_index + 1}/{len(workflow.steps)}: {step_id}...")
+                step_start_time = datetime.utcnow()
+
+                yield ExecutionResult(
+                    workflow_id=workflow_id,
+                    status="RUNNING",
+                    start_time=start_time,
+                    message=f"➡️ Executing step **{step_index + 1} / {len(workflow.steps)}**: `{step.function_id}`..."
+                )
 
                 try:
                     # Prepare parameters for this step
@@ -136,7 +143,6 @@ class ActionModule:
                     )
 
                     # Execute the step
-                    step_start_time = datetime.utcnow()
                     step_result = await self._execute_step(step, step_parameters)
                     step_end_time = datetime.utcnow()
 
@@ -242,7 +248,7 @@ class ActionModule:
             self.active_workflows[workflow_id]["result"] = execution_result
 
             logger.info(f"Workflow {workflow_id} completed with status: {workflow_status}")
-            return execution_result
+            yield execution_result
 
         except Exception as e:
             logger.error(f"Error executing workflow: {str(e)}")

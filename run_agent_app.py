@@ -1,13 +1,11 @@
 import time
-
 import streamlit as st
 import json
 import os
 import asyncio
 import random
-from typing import List, Dict, Any, Optional
+from typing import Any
 
-# Import your agent modules (adjust paths as needed)
 from common.models.messages import UserInput, UserMetadata, FormattedOutput, ChatMessage
 from core.memory.module import MemoryModule
 from core.reasoning.module import ReasoningModule
@@ -57,6 +55,8 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
 
         # Generate random 4-digit number for output file
         num = str(random.randint(1000, 9999))
+        final_result = None
+        status_placeholder = st.empty()
 
         # Process uploaded files if any
         files = []
@@ -106,16 +106,17 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
             )
 
         # Execute the workflow with progress indicator
-        with st.spinner("Finished preparing.Executing workflow..."):
-            execution_result = await action_module.execute_workflow(
-                workflow_definition, param_result
-            )
-
-        # If execution failed, return error message
-        if execution_result.status != "COMPLETED":
-            output = await perception_module.format_output(execution_result.errors, user_input_text,"text")
-            await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
-            return output.content
+        async for update in action_module.execute_workflow(workflow_definition, param_result):
+            status = update.status
+            if status == "RUNNING":
+                status_placeholder.markdown(update.message)
+            elif status == "COMPLETED":
+                status_placeholder.empty()
+                final_result = update
+            else:
+                output = await perception_module.format_output(update.errors, user_input_text, "text")
+                await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
+                return output.content
 
         # Clean up temporary files
         for file_info in files:
@@ -123,7 +124,7 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
                 os.remove(file_info["path"])
 
         # On success, return the result
-        output = await perception_module.format_output(execution_result.output.output, user_input_text, "json")
+        output = await perception_module.format_output(final_result.output.output, user_input_text, "json")
         await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
 
         logger.info(f"Workflow executed successfully. Output saved to output_{num}.json")

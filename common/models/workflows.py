@@ -225,13 +225,14 @@ class ExecutionMetrics(BaseModel):
 
 class ExecutionResult(BaseModel):
     workflow_id: str
-    status: Literal["COMPLETED", "FAILED", "PAUSED", "CANCELLED"]
+    status: Literal["COMPLETED", "FAILED", "PAUSED", "CANCELLED", "RUNNING"]
     start_time: datetime
     end_time: Optional[datetime] = None
     step_results: Dict[str, StepResult] = None
     output: Any = None
     errors: List[ExecutionError] = None
-    metrics: ExecutionMetrics
+    metrics: ExecutionMetrics = None
+    message: str = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -245,5 +246,6 @@ class ExecutionResult(BaseModel):
             } if self.step_results else None,
             "output": self.output.to_dict() if self.output else None,
             "errors": [error.to_dict() for error in self.errors] if self.errors else None,
-            "metrics": self.metrics.to_dict() if self.metrics else None
+            "metrics": self.metrics.to_dict() if self.metrics else None,
+            "message": self.message
         }
