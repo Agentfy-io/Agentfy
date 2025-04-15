@@ -69,9 +69,10 @@ async def clean_raw_data(user_request: str, tweet_data: List[Dict], next_step: s
         # Return a list of the first column with the correct type
         cleaned_df = df[relevant_keys[0]].fillna("").astype(item_type).tolist()
     else:
-        # Return a list of dicts with only relevant keys
+        # Return a list of dicts with only relevant keys, remove rows with all NaN values
+        df = df.dropna(how='all')
+        # TODO： if the number of rows is too large, we should sample the data
+        df = df.head(10)
         cleaned_df = df[relevant_keys].fillna("").to_dict(orient="records")
-
-    logger.info(f"Cleaned data: {cleaned_df}")
 
     return cleaned_df
