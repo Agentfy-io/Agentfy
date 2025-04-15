@@ -36,6 +36,32 @@ class PerceptionModule:
         self.security_validator = SecurityValidator()
         self.input_sanitizer = InputSanitizer()
         self.file_validator = FileValidator()
+        self.chatgpt = ChatGPT()
+
+    async def clarify_user_request(self, user_request: str) -> Dict[str, Any]:
+        """
+        Use GPT to clarify and rephrase a user request into a clear, goal-oriented instruction.
+
+        Args:
+            user_request: The original user request in natural language.
+
+        Returns:
+            A clear and concise goal-oriented version of the request.
+        """
+        logger.info("Clarifying user request....")
+        system_prompt = (
+            "You are an intelligent assistant that helps rephrase ambiguous user instructions into clear, goal-oriented tasks for social media agents "
+            "Determine if the request is relevant, clean typo. Output a JSON with:\n"
+            "- is_valid (bool): if the request is actionable\n"
+            "- rephrased_request (str): only if valid\n"
+            "- reason (str): why it's invalid, if applicable"
+        )
+
+        user_prompt = f"Original request: {user_request}\n\nRespond with JSON:"
+
+        response = await self.chatgpt.chat(system_prompt, user_prompt)
+        response = json.loads(response['response']["choices"][0]["message"]["content"].strip())
+        return response
 
     async def validate_input(self, input_data: Union[Dict[str, Any], UserInput]) -> ValidationResult:
         """
@@ -75,7 +101,8 @@ class PerceptionModule:
                     )
                     errors.append({
                         "type": "security",
-                        "details": [issue.dict() for issue in security_check.detected_issues]
+                        "details": [issue.dict() for issue in security_check.detected_issues],
+                        "message": "Your request contains potentially harmful content that cannot be processed."
                     })
 
             # Validate files if present
@@ -87,7 +114,8 @@ class PerceptionModule:
                     if not file_validation["is_allowed"]:
                         errors.append({
                             "type": "file",
-                            "details": file_validation["reason"]
+                            "details": file_validation["reason"],
+                            "message": f"File '{file_info.filename}' is not allowed. {file_validation['reason']}"
                         })
 
             # If there are errors, return validation result with errors
@@ -96,6 +124,20 @@ class PerceptionModule:
 
             # Sanitize input
             sanitized_input = self.input_sanitizer.sanitize_input(input_data)
+
+            # refine user text input
+            if sanitized_input['text']:
+                new_request = await self.clarify_user_request(sanitized_input['text'])
+                if new_request.get("is_valid"):
+                    sanitized_input['text'] = new_request.get("rephrased_request")
+                else:
+                    errors.append({
+                        "type": "clarification",
+                        "details": new_request['reason'],
+                        "message": f"Request clarification failed: {new_request['reason']}"
+                    })
+                    return ValidationResult(is_valid=False, errors=errors)
+
 
             return ValidationResult(
                 is_valid=True,
