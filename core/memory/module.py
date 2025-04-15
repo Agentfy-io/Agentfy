@@ -57,12 +57,14 @@ class MemoryModule:
             logger.error(f"Error getting chat history: {str(e)}")
             raise RecordNotFoundError(f"Chat history not found for user: {user_id}", {"details": str(e)})
 
-    async def add_chat_message(self, user_id: str, message: Union[ChatMessage, Dict[str, Any]]) -> str:
+    async def add_chat_message(self, user_id: str, sender:str, receiver:str, message: Any) -> str:
         """
         Add a message to the chat history.
 
         Args:
             user_id: The user ID
+            sender: The sender of the message
+            receiver: The receiver of the message
             message: The chat message to add
 
         Returns:
@@ -72,13 +74,17 @@ class MemoryModule:
             StorageError: If message storage fails
         """
         try:
-            # Convert dict to ChatMessage if needed
-            if isinstance(message, dict):
-                message = ChatMessage(**message)
-
-            # Ensure message has an ID
-            if not message.id:
-                message.id = str(uuid.uuid4())
+            # Convert message to ChatMessage if not already
+            if not isinstance(message, ChatMessage):
+                message = ChatMessage(
+                    id=str(uuid.uuid4()),
+                    sender=sender,
+                    receiver=receiver,
+                    content=message,
+                    metadata={
+                        "user_id": user_id
+                    }
+                )
 
             # Initialize chat history for user if it doesn't exist
             if user_id not in self.chat_history:
