@@ -7,10 +7,11 @@
 from typing import Any, Dict, List, Optional, Union
 import json
 from datetime import datetime
-from common.utils.logging import get_logger
 from common.exceptions.exceptions import OutputFormattingError
+from common.utils.logging import setup_logger
 
-logger = get_logger(__name__)
+# Set up logger
+logger = setup_logger(__name__)
 
 
 class OutputFormatter:

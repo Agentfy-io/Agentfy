@@ -1,9 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+@file: agentfy/common/utils/logging.py
+@desc: Logging utility for the Agentfy backend.
+@auth(s): Callmeiks
+"""
 import logging
 import sys
 import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-
 
 def setup_logger(name, level=None):
     """

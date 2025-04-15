@@ -8,7 +8,7 @@ Agentfy is a modular microservices architecture designed to process user request
 
 # Installation and Setup
 
-1. Clone the repository
+1. Clone the repository 
 2. Install dependencies: `pip install -r requirements.txt`
 3. Create or Update `agent_registry.json` file with available sub-agents and functions (Optional)
    - Example:
@@ -45,16 +45,68 @@ Agentfy is a modular microservices architecture designed to process user request
        }
      }
      ```
-4. Set environment variables `.env` or update `config.py` (optional)
-5. Run the Sample Test: `python main_test.py` or `python3 main_test.py`, you may change the `user_input_list` in `main_test.py` to test different inputs
-   - Example:
-     ```python
-     user_input_list = [
-         "Post this tweet :‘AI is eating the world!’",
-         "What are the trending topics in Canada right now, and which ones are tech-related?",
-     ]
+4. Set environment variables in `.env` file or update `config.py` (optional)
+   - Required API keys and configurations can be found in `config.py`
+   - Example `.env` file:
      ```
-6. IMPORTANT: some interactive agents may require additional setup, if there's an error during execution, please ignore it for now, as the system is still in development.
+     OPENAI_API_KEY=your_key_here
+     X_API_KEY=your_key_here
+     X_API_SECRET=your_secret_here
+     YOUTUBE_API_KEY=your_key_here
+     ....
+     ```
+
+## Running the Program
+
+You can interact with the program in three different ways:
+
+### 1. Command Line Interface (CLI)
+```bash
+python run_agent_cli.py
+```
+- Runs the program in command-line interface mode
+- Interactive mode for direct user input
+- Useful for quick testing and debugging
+- Simple text-based interface
+
+### 2. FastAPI Web Interface (Currently Unavailable, Do not Use!)
+```bash
+python run_agent_api.py
+```
+- Runs the program as a FastAPI server
+- Access the web interface at `http://localhost:8000`
+- Available endpoints:
+  - `/process`: Process user requests
+  - `/workflow/{id}/status`: Check workflow status
+  - `/workflow/parameters`: Update workflow parameters
+  - `/workflow/{id}/result`: Get workflow results
+  - `/workflow/{id}/cancel`: Cancel a workflow
+- RESTful API for programmatic access
+
+### 3. Streamlit Web Interface
+```bash
+streamlit run run_agent_app.py
+```
+- Runs the program with a Streamlit web interface
+- Access the interface at `http://localhost:8501`
+- User-friendly graphical interface
+- Real-time updates and visual feedback
+- Interactive widgets for parameter input
+
+## Important Notes
+
+1. Some interactive agents may require additional setup:
+   - YouTube agents need OAuth2 authentication
+   - Twitter agents need API keys and access tokens
+   - Other platform-specific requirements may apply
+
+2. If you encounter errors during execution:
+   - Check your API keys and credentials
+   - Verify the agent registry configuration
+   - Ensure all required dependencies are installed
+   - Check the logs in the `logs` directory for detailed error messages
+
+3. The system is still in development, so some features may not be fully implemented or may change in future updates.
 
 ## 🏗️ System Architecture
 
@@ -62,27 +114,59 @@ Agentfy is a modular microservices architecture designed to process user request
 Agentfy/
 ├── core/                    # Core system components
 │   ├── perception/             # Input validation & output formatting (partially complete)
+│   │   ├── module.py          # Main module for input validation and output formatting
+│   │   ├── validators.py      # Input validation utilities (optional)
+│   │   └── formatters.py      # Output formatting utilities (optional)
 │   ├── memory/                 # Data persistence & retrieval (partially complete)
+│   │   ├── module.py          # Main module for data persistence and retrieval
+│   │   └── storage.py         # Data storage implementations
 │   ├── reasoning/              # Request analysis & workflow planning (partially complete)
+│   │   ├── module.py          # Main module for analyzing user input and generating workflows
+│   │   └── workflow_generator.py # Workflow generation logic
 │   ├── action/                 # Workflow execution (partially complete)
+│   │   ├── module.py          # Main module for workflow execution
+│   │   └── executor.py        # Workflow execution engine
 │   ├── monitoring/             # Execution monitoring (Under Development, Not Available)
+│   │   ├── module.py          # Main module for execution monitoring
+│   │   └── metrics.py         # Performance tracking utilities
 │   └── communication/          # Inter-agent communication (Under Development, Not Available)
+│       ├── module.py          # Main module for inter-agent communication
+│       └── message_bus.py     # Message passing system
 ├── common/                  # Shared utilities 
-│   ├── ais/                    # ai utilities, e.g., wrapper class for ChatGPT, Claude, DeepSeek
-│   ├── models/                 # models for data structures, design for communication between modules, e.g., messages, workflows, users
+│   ├── ais/                    # AI utilities
+│   │   ├── module.py          # Main module for AI service wrappers
+│   │   ├── chatgpt.py         # ChatGPT API wrapper
+│   │   ├── claude.py          # Claude API wrapper
+│   │   └── deepseek.py        # DeepSeek API wrapper
+│   ├── models/                 # Data structures and communication models
+│   │   ├── messages.py        # Message-related models for user communication
+│   │   ├── workflows.py       # Workflow-related models for execution
+│   │   └── agents.py          # SubAgent-related models
 │   ├── security/               # Security utilities
-│   ├── utils/                  # Common utilities  
+│   │   ├── validators.py      # Security validation utilities
+│   │   └── sanitizers.py      # Input sanitization utilities
+│   ├── utils/                  # Common utilities
+│   │   ├── logging.py         # Structured logging utilities
+│   │   └── helpers.py         # Common helper functions
 │   └── exceptions/             # Custom exceptions
+│       └── exceptions.py      # Custom exception hierarchy
 ├── agents/                  # Platform-specific agents
 │   ├── tiktok/                 # TikTok agents
+│   │   ├── crawlers.py        # TikTok data collection agents
+│   │   ├── analysis.py        # TikTok data analysis agents
+│   │   └── interactive.py     # TikTok interaction agents
 │   ├── twitter/                # Twitter agents
+│   │   ├── crawlers.py        # Twitter data collection agents
+│   │   ├── analysis.py        # Twitter data analysis agents
+│   │   └── interactive.py     # Twitter interaction agents
 │   └── ...                     # Other platform agents
 ├── config.py                # Configuration management 
 ├── agents_registry.json     # Agent registry for available agents and functions
 ├── requirements.txt         # Python dependencies
 ├── README.md                # Documentation
-├── main_test.md             # Sample test file for running the system
-└── main.py                  # Main entry point for Agentfy (still in development, don't use it yet, use `main_test.py` instead)
+├── run_agent_cli.py         # CLI interface entry point
+├── run_agent_app.py         # Streamlit web interface entry point
+└── run_agent_api.py         # FastAPI interface entry point (Under Development)
 
 ```
 
@@ -160,13 +244,3 @@ Each social media platform has its own set of agents divided into categories:
 3. Add agent definitions to the agent registry JSON
 4. The system will automatically incorporate these into workflows when appropriate
 
-
-## 🌐 FastAPI Integration (Under Development, Not Yet Complete)
-
-The `main.py` file integrates all modules into a cohesive API with these endpoints:
-
-- `/process`: Process user requests and build workflows
-- `/workflow/{id}/status`: Check workflow status
-- `/workflow/parameters`: Update missing parameters and execute workflows
-- `/workflow/{id}/result`: Retrieve workflow results
-- `/workflow/{id}/cancel`: Cancel a workflow

@@ -4,13 +4,12 @@
 @desc: customized exceptions
 @auth: Callmeiks
 """
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import re
-import mimetypes
-from common.utils.logging import get_logger
-from common.models.messages import FileValidationResult
+from common.utils.logging import setup_logger
 
-logger = get_logger(__name__)
+# Set up logger
+logger = setup_logger(__name__)
 
 
 class ContentValidator:

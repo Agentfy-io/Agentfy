@@ -1,28 +1,30 @@
 # -*- coding: utf-8 -*-
 """
 @file: agentfy/core/perception/module.py
-@desc: Perception Module for handling input validation, security checks,
+@desc: Perception Module for handling input validation, security checks, and output formatting.
+       This module is responsible for:
+       - Validating and sanitizing user input
+       - Performing security checks
+       - Clarifying ambiguous user requests
+       - Formatting output for presentation
 @auth: Callmeiks
+@date: 2024-04-15
 """
 from typing import Any, Dict, List, Optional, Union
 import json
-
 import pandas as pd
 from pydantic import ValidationError
 
 from common.ais.chatgpt import ChatGPT
-from common.models.messages import (
-    UserInput, ValidationResult, SecurityCheckResult,
-    FileValidationResult, PromptMessage, FormattedOutput,
-    ParameterInfo
-)
 from common.security.validators import SecurityValidator
 from common.security.sanitizers import InputSanitizer, FileValidator
-from common.exceptions.exceptions import (
-    InputValidationError, SecurityCheckFailedError,
-    FileValidationError, OutputFormattingError
-)
 from common.utils.logging import setup_logger
+from common.exceptions.exceptions import (
+    InputValidationError, OutputFormattingError
+)
+from common.models.messages import (
+    UserInput, ValidationResult, FormattedOutput,
+)
 
 # Set up logger
 logger = setup_logger(__name__)
@@ -30,12 +32,25 @@ logger = setup_logger(__name__)
 
 class PerceptionModule:
     """
-    Perception Module for handling input validation, security checks,
-    and output formatting.
+    Perception Module for handling input validation, security checks, and output formatting.
+    
+    This module serves as the first point of contact for user input, ensuring that:
+    1. Input is valid and properly formatted
+    2. Security checks are performed
+    3. Ambiguous requests are clarified
+    4. Output is formatted appropriately for presentation
     """
 
     def __init__(self):
-        """Initialize the perception module with validators and sanitizers."""
+        """
+        Initialize the perception module with validators and sanitizers.
+        
+        Initializes:
+        - SecurityValidator: For checking input for security issues
+        - InputSanitizer: For cleaning and normalizing input
+        - FileValidator: For validating file uploads
+        - ChatGPT: For clarifying ambiguous requests and formatting output
+        """
         self.security_validator = SecurityValidator()
         self.input_sanitizer = InputSanitizer()
         self.file_validator = FileValidator()
@@ -46,10 +61,21 @@ class PerceptionModule:
         Use GPT to clarify and rephrase a user request into a clear, goal-oriented instruction.
 
         Args:
-            user_request: The original user request in natural language.
+            user_request (str): The original user request in natural language.
 
         Returns:
-            A clear and concise goal-oriented version of the request.
+            Dict[str, Any]: A dictionary containing:
+                - is_valid (bool): Whether the request is actionable
+                - rephrased_request (str): The clarified request (if valid)
+                - reason (str): Explanation if request is invalid
+
+        Example:
+            >>> await clarify_user_request("post something about AI")
+            {
+                "is_valid": True,
+                "rephrased_request": "Create a social media post about artificial intelligence",
+                "reason": None
+            }
         """
         logger.info("Clarifying user request....")
         system_prompt = (
@@ -70,11 +96,21 @@ class PerceptionModule:
         """
         Validate and sanitize user input.
 
+        This method performs several validation steps:
+        1. Converts input to UserInput model if needed
+        2. Performs security checks on text input
+        3. Validates file uploads if present
+        4. Sanitizes the input
+        5. Clarifies ambiguous text input
+
         Args:
-            input_data: The user input data to validate
+            input_data (Union[Dict[str, Any], UserInput]): The user input data to validate
 
         Returns:
-            ValidationResult: The validation result with sanitized input if valid
+            ValidationResult: The validation result containing:
+                - is_valid (bool): Whether the input is valid
+                - errors (List[Dict]): Any validation errors
+                - sanitized_input (Dict): The cleaned input if valid
 
         Raises:
             InputValidationError: If input validation fails
@@ -141,7 +177,6 @@ class PerceptionModule:
                     })
                     return ValidationResult(is_valid=False, errors=errors)
 
-
             return ValidationResult(
                 is_valid=True,
                 sanitized_input=sanitized_input
@@ -170,6 +205,17 @@ class PerceptionModule:
     async def get_gpt_response(self, result: Any, user_input_text: str, output_format: str = "json") -> str:
         """
         Generate the opening response for the user using GPT.
+
+        Args:
+            result (Any): The result data to include in the response
+            user_input_text (str): The original user input text
+            output_format (str): The desired output format ("json" or "text")
+
+        Returns:
+            str: The generated response text
+
+        Raises:
+            OutputFormattingError: If the output format is not supported
         """
         logger.info("Generating GPT response", {"format": output_format})
 
@@ -203,13 +249,23 @@ class PerceptionModule:
         """
         Format the output for presentation to the user.
 
+        This method handles different output formats:
+        - JSON: Converts data to a markdown table with an opening message
+        - Text: Generates a conversational response
+
         Args:
-            result: The result data to format
-            user_input_text: The original user input text
-            output_format: The desired output format (e.g., "json", "text")
+            result (Any): The result data to format
+            user_input_text (str): The original user input text
+            output_format (str): The desired output format ("json" or "text")
 
         Returns:
-            FormattedOutput: The formatted output for the user
+            FormattedOutput: The formatted output containing:
+                - type (str): The type of output
+                - content (Any): The formatted content
+                - format (str): The output format
+
+        Raises:
+            OutputFormattingError: If formatting fails or format is not supported
         """
         logger.info("Formatting output", {"format": output_format})
         try:

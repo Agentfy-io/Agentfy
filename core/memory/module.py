@@ -1,11 +1,13 @@
-# social_media_agent/core/memory/module.py
+# -*- coding: utf-8 -*-
+"""
+@file: agentfy/core/memory/module.py
+@desc: Memory Module for storing and retrieving data such as chat history,
+@auth: Callmeiks
+"""
 from typing import Any, Dict, List, Optional, Union
-from datetime import datetime
-import json
 import uuid
 
 from common.models.messages import ChatMessage
-from common.models.workflows import WorkflowDefinition
 from common.exceptions.exceptions import RecordNotFoundError, StorageError
 from common.utils.logging import setup_logger
 
@@ -17,16 +19,12 @@ class MemoryModule:
     Memory Module for storing and retrieving data such as chat history,
     workflow history, user preferences, and agent knowledge.
     Uses in-memory storage instead of a database.
-
-    FOR REFERENCE ONLY！ ！ ！ This module is designed to be a placeholder ！ ！ ！
     """
 
     def __init__(self):
         """Initialize the memory module with in-memory storage."""
         # In-memory storage for different data types
         self.chat_history = {}  # user_id -> list of messages
-
-    # Chat History Methods
 
     async def get_user_chat_history(self, user_id: str, limit: int = 50) -> List[ChatMessage]:
         """
