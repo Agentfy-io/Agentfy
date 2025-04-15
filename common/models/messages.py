@@ -8,7 +8,10 @@ from typing import Any, Dict, List, Optional, Union, Literal
 from pydantic import BaseModel, Field
 from datetime import datetime
 import uuid
+from common.utils.logging import setup_logger
 
+# Set up logger
+logger = setup_logger(__name__)
 
 class SecurityIssue(BaseModel):
     type: str
@@ -38,7 +41,7 @@ class UserInput(BaseModel):
 
 class ValidationResult(BaseModel):
     is_valid: bool
-    errors: List[Dict[str, Any]] = None
+    errors: List[Any] = None
     sanitized_input: Optional[Dict[str, Any]] = None
 
 
@@ -74,7 +77,7 @@ class ChatMessage(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     sender: Literal["USER", "AGENT", "SYSTEM"] = Field(default="USER")
     receiver: Literal["USER", "AGENT", "SYSTEM"] = Field(default="AGENT")
-    content: str = None
+    content: Any = None
     metadata: Dict[str, Any] = None
 
 

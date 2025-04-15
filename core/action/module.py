@@ -216,11 +216,8 @@ class ActionModule:
             # Determine workflow status
             workflow_status = "COMPLETED" if not errors else "FAILED"
 
-            # Collect outputs
-            outputs = {}
-            for step_id, result in step_results.items():
-                if result.status == "COMPLETED" and result.output:
-                    outputs[step_id] = result.output
+            # find the final step result
+            final_step_result = list(step_results.values())[-1]
 
             # Create execution result
             execution_result = ExecutionResult(
@@ -229,7 +226,7 @@ class ActionModule:
                 start_time=start_time,
                 end_time=end_time,
                 step_results=step_results,
-                outputs=outputs,
+                output=final_step_result,
                 errors=errors,
                 metrics=ExecutionMetrics(
                     total_duration=total_duration_ms,
@@ -302,7 +299,6 @@ class ActionModule:
             return {}
 
         return result
-
 
     async def _execute_step(self, step: WorkflowStep, parameters: Dict[str, Any]) -> Any:
         """

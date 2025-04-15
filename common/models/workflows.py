@@ -8,6 +8,10 @@ from typing import Any, Dict, List, Optional, Union, Literal
 from pydantic import BaseModel, Field
 from datetime import datetime
 import uuid
+from common.utils.logging import setup_logger
+
+# Set up logger
+logger = setup_logger(__name__)
 
 class Parameter(BaseModel):
     name: str
@@ -225,7 +229,7 @@ class ExecutionResult(BaseModel):
     start_time: datetime
     end_time: Optional[datetime] = None
     step_results: Dict[str, StepResult] = None
-    outputs: Dict[str, Any] = None
+    output: Any = None
     errors: List[ExecutionError] = None
     metrics: ExecutionMetrics
 
@@ -239,7 +243,7 @@ class ExecutionResult(BaseModel):
                 step_id: step_result.to_dict()
                 for step_id, step_result in self.step_results.items()
             } if self.step_results else None,
-            "outputs": self.outputs,
+            "output": self.output.to_dict() if self.output else None,
             "errors": [error.to_dict() for error in self.errors] if self.errors else None,
             "metrics": self.metrics.to_dict() if self.metrics else None
         }
