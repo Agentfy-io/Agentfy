@@ -327,8 +327,8 @@ class ReasoningModule:
         if chat_history:
             message += "Chat History:\n"
             for entry in chat_history[-5:]:  # Include only the last 5 messages for context
-                sender = "User" if entry.get("sender") == "USER" else "Assistant"
-                message += f"{sender}: {entry.get('content')}\n"
+                sender = "User" if entry.sender == "USER" else "Social media agent"
+                message += f"{sender}: {entry.content}\n"
 
         return message
 
