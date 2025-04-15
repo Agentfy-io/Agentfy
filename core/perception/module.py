@@ -6,8 +6,11 @@
 """
 from typing import Any, Dict, List, Optional, Union
 import json
+
+import pandas as pd
 from pydantic import ValidationError
 
+from common.ais.chatgpt import ChatGPT
 from common.models.messages import (
     UserInput, ValidationResult, SecurityCheckResult,
     FileValidationResult, PromptMessage, FormattedOutput,
@@ -164,94 +167,71 @@ class PerceptionModule:
                 {"details": str(e)}
             )
 
-    async def format_output(self, result: Any, output_format: str = "json") -> FormattedOutput:
+    async def get_gpt_response(self, result: Any, user_input_text: str, output_format: str = "json") -> str:
+        """
+        Generate the opening response for the user using GPT.
+        """
+        logger.info("Generating GPT response", {"format": output_format})
+
+        if output_format == "json":
+            system_prompt = (
+                "You are a helpful social media assistant. Create a brief 2-3 sentence conversational opening "
+                "based on the user query and sample result data. Highlight key insights without over-explaining. "
+                "Add a few emojis to enhance friendliness and professionalism."
+            )
+            user_prompt = (
+                f"User query: {user_input_text}\n\n"
+                f"Sample data: {result[:5]}\n\n"
+            )
+        elif output_format == "text":
+            system_prompt = (
+                "You are a helpful social media assistant. Create a concise, conversational response "
+                "based on the user query and final result. Keep it under 150 words. Return output in Markdown format. "
+                "Feel free to include a few emojis to enhance tone."
+            )
+            user_prompt = (
+                f"User query: {user_input_text}\n\n"
+                f"Result: {result}\n\n"
+            )
+        else:
+            raise OutputFormattingError(f"Unsupported output format: {output_format}")
+
+        response = await self.chatgpt.chat(system_prompt, user_prompt)
+        return response['response']["choices"][0]["message"]["content"].strip()
+
+    async def format_output(self, result: Any, user_input_text: str, output_format: str = "json") -> FormattedOutput:
         """
         Format the output for presentation to the user.
 
         Args:
             result: The result data to format
-            output_format: The desired output format (json, text, html)
+            user_input_text: The original user input text
+            output_format: The desired output format (e.g., "json", "text")
 
         Returns:
-            FormattedOutput: The formatted output
-
-        Raises:
-            OutputFormattingError: If output formatting fails
+            FormattedOutput: The formatted output for the user
         """
+        logger.info("Formatting output", {"format": output_format})
         try:
-            logger.info(
-                "Formatting output",
-                {"format": output_format}
-            )
-
             if output_format == "json":
-                # If result is already a dict, use it directly
-                if isinstance(result, dict):
-                    content = result
-                # If result is an object with a dict method, use that
-                elif hasattr(result, "dict"):
-                    content = result.dict()
-                # Otherwise, convert to string and then try to parse as JSON
-                else:
-                    try:
-                        content = json.loads(str(result))
-                    except json.JSONDecodeError:
-                        content = {"result": str(result)}
-
-                return FormattedOutput(
-                    type="data",
-                    content=content,
-                    format="json"
-                )
-
+                opener = await self.get_gpt_response(result, user_input_text, output_format)
+                try:
+                    df = pd.json_normalize(result)
+                    table = df.to_markdown(index=False)
+                    content = f"{opener}\n\n{table}"
+                except Exception as e:
+                    logger.error("Error formatting JSON to Markdown", {"error": str(e)})
+                    raise OutputFormattingError("Failed to format JSON data to Markdown", {"details": str(e)})
             elif output_format == "text":
-                # Convert result to string
-                if hasattr(result, "dict"):
-                    content = json.dumps(result.dict(), indent=2)
-                elif isinstance(result, dict):
-                    content = json.dumps(result, indent=2)
-                else:
-                    content = str(result)
-
-                return FormattedOutput(
-                    type="message",
-                    content=content,
-                    format="text"
-                )
-
-            elif output_format == "html":
-                # Convert result to HTML
-                if hasattr(result, "dict"):
-                    result_dict = result.dict()
-                elif isinstance(result, dict):
-                    result_dict = result
-                else:
-                    result_dict = {"result": str(result)}
-
-                # Simple HTML table format
-                html_content = "<table>"
-                for key, value in result_dict.items():
-                    html_content += f"<tr><td>{key}</td><td>{value}</td></tr>"
-                html_content += "</table>"
-
-                return FormattedOutput(
-                    type="html",
-                    content=html_content,
-                    format="html"
-                )
-
+                content = await self.get_gpt_response(result, user_input_text, output_format)
             else:
                 raise OutputFormattingError(f"Unsupported output format: {output_format}")
 
+            return FormattedOutput(type="data", content=content, format="json")
+
         except Exception as e:
-            logger.error(
-                "Output formatting error",
-                {"error": str(e), "format": output_format}
-            )
-            raise OutputFormattingError(
-                f"Failed to format output as {output_format}",
-                {"details": str(e)}
-            )
+            logger.error("Output formatting error", {"error": str(e), "format": output_format})
+            raise OutputFormattingError(f"Failed to format output as {output_format}", {"details": str(e)})
 
     async def generate_parameter_prompt(self, missing_parameters: List[Dict[str, Any]]) -> PromptMessage:
         """
