@@ -91,31 +91,31 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
         # If not valid, return formatted error message
         if not valid_result.is_valid:
             messages = "\n".join(error["message"] for error in valid_result.errors)
-            output = await perception_module.format_output(messages, "text")
+            output = await perception_module.format_output(messages, user_input_text, "text")
             await memory_module.add_chat_message(user_id, "SYSTEM", "USER", output.content)
-            return f"Your request is invalid. Please check the input format. (Error hint: {messages})"
+            return output.content
 
         # Load memory and registry for reasoning
         chat_history = await memory_module.get_user_chat_history(user_input.metadata.user_id)
         agents_registry = await get_agent_registry()
 
         # Generate a workflow and prepare parameters with progress indicator
-        with st.spinner("Analyzing your request..."):
+        with st.spinner("Generating and preparing workflow..."):
             workflow_definition, param_result = await reasoning_module.analyze_request_and_build_workflow(
                 user_input_text, agents_registry, chat_history
             )
 
         # Execute the workflow with progress indicator
-        with st.spinner("Processing your request..."):
+        with st.spinner("Finished preparing.Executing workflow..."):
             execution_result = await action_module.execute_workflow(
                 workflow_definition, param_result
             )
 
         # If execution failed, return error message
         if execution_result.status != "COMPLETED":
-            output = await perception_module.format_output(execution_result.errors, "text")
+            output = await perception_module.format_output(execution_result.errors, user_input_text,"text")
             await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
-            return f"Your request could not be completed. Please try again later. (Error hint: STEP_EXECUTION_ERROR)"
+            return output.content
 
         # Clean up temporary files
         for file_info in files:
@@ -123,29 +123,19 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
                 os.remove(file_info["path"])
 
         # On success, return the result
-        output = await perception_module.format_output(execution_result.output, "json")
+        output = await perception_module.format_output(execution_result.output.output, user_input_text, "json")
         await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
 
-        result = {
-            "status": "success",
-            "workflow": workflow_definition.to_dict(),
-            "execution_result": execution_result.to_dict()
-        }
-
-        # Save as JSON file
-        with open(f"output_{num}.json", "w") as f:
-            json.dump(result, f, indent=4)
-
         logger.info(f"Workflow executed successfully. Output saved to output_{num}.json")
-        return output
+        return output.content
 
     except Exception as e:
         logger.exception("Error in process_user_input")
         error_message = f"Internal error occurred: {str(e)}"
-        output = await perception_module.format_output(error_message, "text")
+        output = await perception_module.format_output(error_message, user_input_text,"text")
         if "user_id" in st.session_state:
             await memory_module.add_chat_message(st.session_state.user_id, "SYSTEM", "USER", output.content)
-        return output
+        return output.content
 
 
 # Function to run async functions in Streamlit
