@@ -113,52 +113,21 @@ streamlit run run_agent_app.py
 ```
 Agentfy/
 ├── core/                    # Core system components
-│   ├── perception/             # Input validation & output formatting (partially complete)
-│   │   ├── module.py          # Main module for input validation and output formatting
-│   │   ├── validators.py      # Input validation utilities (optional)
-│   │   └── formatters.py      # Output formatting utilities (optional)
-│   ├── memory/                 # Data persistence & retrieval (partially complete)
-│   │   ├── module.py          # Main module for data persistence and retrieval
-│   │   └── storage.py         # Data storage implementations
-│   ├── reasoning/              # Request analysis & workflow planning (partially complete)
-│   │   ├── module.py          # Main module for analyzing user input and generating workflows
-│   │   └── workflow_generator.py # Workflow generation logic
-│   ├── action/                 # Workflow execution (partially complete)
-│   │   ├── module.py          # Main module for workflow execution
-│   │   └── executor.py        # Workflow execution engine
+│   ├── perception/             # Input validation & output formatting (Optimizing)
+│   ├── memory/                 # Data persistence & retrieval (Optimizing)
+│   ├── reasoning/              # Request analysis & workflow planning (Optimizing)
+│   ├── action/                 # Workflow execution (Optimizing)
 │   ├── monitoring/             # Execution monitoring (Under Development, Not Available)
-│   │   ├── module.py          # Main module for execution monitoring
-│   │   └── metrics.py         # Performance tracking utilities
 │   └── communication/          # Inter-agent communication (Under Development, Not Available)
-│       ├── module.py          # Main module for inter-agent communication
-│       └── message_bus.py     # Message passing system
 ├── common/                  # Shared utilities 
 │   ├── ais/                    # AI utilities
-│   │   ├── module.py          # Main module for AI service wrappers
-│   │   ├── chatgpt.py         # ChatGPT API wrapper
-│   │   ├── claude.py          # Claude API wrapper
-│   │   └── deepseek.py        # DeepSeek API wrapper
 │   ├── models/                 # Data structures and communication models
-│   │   ├── messages.py        # Message-related models for user communication
-│   │   ├── workflows.py       # Workflow-related models for execution
-│   │   └── agents.py          # SubAgent-related models
 │   ├── security/               # Security utilities
-│   │   ├── validators.py      # Security validation utilities
-│   │   └── sanitizers.py      # Input sanitization utilities
 │   ├── utils/                  # Common utilities
-│   │   ├── logging.py         # Structured logging utilities
-│   │   └── helpers.py         # Common helper functions
 │   └── exceptions/             # Custom exceptions
-│       └── exceptions.py      # Custom exception hierarchy
 ├── agents/                  # Platform-specific agents
 │   ├── tiktok/                 # TikTok agents
-│   │   ├── crawlers.py        # TikTok data collection agents
-│   │   ├── analysis.py        # TikTok data analysis agents
-│   │   └── interactive.py     # TikTok interaction agents
 │   ├── twitter/                # Twitter agents
-│   │   ├── crawlers.py        # Twitter data collection agents
-│   │   ├── analysis.py        # Twitter data analysis agents
-│   │   └── interactive.py     # Twitter interaction agents
 │   └── ...                     # Other platform agents
 ├── config.py                # Configuration management 
 ├── agents_registry.json     # Agent registry for available agents and functions
