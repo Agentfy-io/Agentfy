@@ -9,7 +9,7 @@ from common.utils.logging import setup_logger
 logger = setup_logger(__name__)
 
 
-async def clean_raw_data(user_request: str, tweet_data: List[Dict], next_step: str ) -> List[Any]:
+async def clean_raw_data(user_request: str, tweet_data: List[Dict], next_step: str = None ) -> List[Any]:
     """
     Clean raw tweet data based on user's request using GPT to select relevant keys.
 
@@ -35,6 +35,7 @@ async def clean_raw_data(user_request: str, tweet_data: List[Dict], next_step: s
     system_prompt = (
         "You are a data cleaning assistant. Your task is to determine which key(s) from tweet data are needed for the next step in a processing workflow. "
         "You will be given: (1) a user request, (2) a list of available keys from the data, and (3) a dictionary describing the next step and its expected parameters. "
+        "It's possible that there's no next step, so you will only need to analyze 1 and 2. "
         "Select only the key or keys that are relevant to both the user’s intent and the requirements of the next step. "
         "Determine how many keys to select based on the type of the next step’s parameter: "
         "if it expects a List[str] or List[int] or List[bool] or List[float], then select one key; "

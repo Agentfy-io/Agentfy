@@ -66,7 +66,7 @@
         {
           "agent_id": "x_crawler",
           "function_id": "fetch_trending_topics",
-          "description": "Fetch trending topics for a specific country",
+          "description": "Fetch trending topics board for a specific country",
           "parameters": [
             {
               "name": "country",
