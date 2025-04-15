@@ -57,6 +57,7 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
         num = str(random.randint(1000, 9999))
         final_result = None
         status_placeholder = st.empty()
+        output_format = ""
 
         # Process uploaded files if any
         files = []
@@ -86,7 +87,8 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
         )
 
         # Validate the input
-        valid_result = await perception_module.validate_input(user_input)
+        with st.spinner("Validating your request..."):
+            valid_result = await perception_module.validate_input(user_input)
 
         # If not valid, return formatted error message
         if not valid_result.is_valid:
@@ -112,7 +114,7 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
                 status_placeholder.markdown(update.message)
             elif status == "COMPLETED":
                 status_placeholder.empty()
-                final_result = update
+                final_result = update.output.output
             else:
                 output = await perception_module.format_output(update.errors, user_input_text, "text")
                 await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
@@ -123,11 +125,17 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
             if os.path.exists(file_info["path"]):
                 os.remove(file_info["path"])
 
+        # check the output type
+        if type(final_result) == dict or type(final_result) == list:
+            output_format = "json"
+        else:
+            output_format = "text"
+
         # On success, return the result
-        output = await perception_module.format_output(final_result.output.output, user_input_text, "json")
+        output = await perception_module.format_output(final_result.output.output, user_input_text, output_format)
         await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
 
-        logger.info(f"Workflow executed successfully. Output saved to output_{num}.json")
+        logger.info(f"Workflow executed successfully!")
         return output.content
 
     except Exception as e:
