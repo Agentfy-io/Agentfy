@@ -2,9 +2,9 @@ import json
 import os
 import asyncio
 import random
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
-from common.models.messages import UserInput, UserMetadata, FormattedOutput, ChatMessage
+from common.models.messages import UserInput, UserMetadata
 from core.memory.module import MemoryModule
 from core.reasoning.module import ReasoningModule
 from core.perception.module import PerceptionModule
@@ -14,106 +14,130 @@ from common.utils.logging import setup_logger
 # Set up logger
 logger = setup_logger(__name__)
 
-# 1. Initialize the core modules
+# Initialize core modules
 memory_module = MemoryModule()
 reasoning_module = ReasoningModule()
 perception_module = PerceptionModule()
 action_module = ActionModule()
-user_id = "user_123"
 
-# Load agent registry from a local JSON file
-async def get_agent_registry():
+
+# Load agent registry
+async def get_agent_registry() -> Dict:
+    """
+    Load agent registry from local JSON file.
+    Returns:
+        Dictionary representing available agents.
+    """
     registry_path = os.getenv("AGENT_REGISTRY_PATH", "agents_registry.json")
     try:
         with open(registry_path, "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"Registry file not found at {registry_path}")
+        print(f"⚠️ Registry file not found at {registry_path}")
         return {}
     except json.JSONDecodeError:
-        print(f"Invalid JSON in registry file at {registry_path}")
+        print(f"⚠️ Invalid JSON format in registry file at {registry_path}")
         return {}
 
-# Process one user input
+
+# Main processing logic
 async def process_user_input(user_input_text: str) -> Any:
+    """
+    Process user input from terminal and return result.
+
+    Args:
+        user_input_text: Raw string from user.
+    Returns:
+        Final response from the agent.
+    """
+    user_id = f"user_{random.randint(1000, 9999)}"
+    session_id = f"session_{random.randint(1000, 9999)}"
+    final_result = None
+
     try:
-        # Construct a user input object
+        # Build user input
         user_input = UserInput(
             text=user_input_text,
             files=[],
             metadata=UserMetadata(
                 user_id=user_id,
-                session_id="session_456",
+                session_id=session_id,
                 source="terminal"
             )
         )
-        #generate random 4 digit number
-        num = str(random.randint(1000, 9999))
 
-        # Validate the input
+        # Step 1: Validate input
         valid_result = await perception_module.validate_input(user_input)
-
-        # If not valid, return formatted error message
         if not valid_result.is_valid:
             messages = "\n".join(error["message"] for error in valid_result.errors)
-            output = await perception_module.format_output(messages, "text")
+            output = await perception_module.format_output(messages, user_input_text,"text")
             await memory_module.add_chat_message(user_id, "SYSTEM", "USER", output.content)
-            return f"Your request is invalid. Please check the input format. (Error hint: {messages})"
+            return f"❌ Invalid input:\n{messages}"
 
-        # Load memory and registry for reasoning
-        chat_history = await memory_module.get_user_chat_history(user_input.metadata.user_id)
+        # Step 2: Get chat history & agent registry
+        chat_history = await memory_module.get_user_chat_history(user_id)
         agents_registry = await get_agent_registry()
 
-        # Generate a workflow and prepare parameters
+        # Step 3: Build workflow
         workflow_definition, param_result = await reasoning_module.analyze_request_and_build_workflow(
             user_input_text, agents_registry, chat_history
         )
 
-        # Execute the workflow
-        execution_result = await action_module.execute_workflow(
-            workflow_definition, param_result
-        )
+        # Step 4: Execute step-by-step with feedback
+        async for update in action_module.execute_workflow(workflow_definition, param_result):
+            if update.status == "RUNNING":
+                continue
+            elif update.status == "COMPLETED":
+                final_result = update
+            else:
+                output = await perception_module.format_output(update.errors, user_input_text, "text")
+                await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
+                return output.content
 
-        # If execution failed, return error message
-        if execution_result.status != "COMPLETED":
-            output = await perception_module.format_output(execution_result.errors, "text")
-            await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
-            return f"Your request could not be completed. Please try again later. (Error hint: STEP_EXECUTION_ERROR)"
+        # check the output type
+        if type(final_result) == dict or type(final_result) == list:
+            output_format = "json"
+        else:
+            output_format = "text"
 
-        # On success, return the result
-        output = await perception_module.format_output(execution_result.output, "json")
+        # Step 5: Format output and store logs
+        output = await perception_module.format_output(final_result.output, user_input_text, output_format)
         await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
 
-        result = {"status": "success", "workflow": workflow_definition.to_dict(), "execution_result": execution_result.to_dict()}
-        #save as json file
-        with open(f"output_{num}.json", "w") as f:
-            json.dump(result, f, indent=4)
-        logger.info(f"Workflow executed successfully. Output saved to output_{num}.json")
-        return output
+        # Save workflow output to file
+        filename = f"output_{random.randint(1000, 9999)}.json"
+        with open(filename, "w") as f:
+            json.dump({
+                "status": "success",
+                "workflow": workflow_definition.to_dict(),
+                "execution_result": final_result.to_dict()
+            }, f, indent=4)
+        logger.info(f"✅ Workflow executed successfully. Saved to `{filename}`")
+
+        return output.content
 
     except Exception as e:
-        logger.exception("Error in process_user_input")
+        logger.exception("❌ Error in process_user_input")
         error_message = f"Internal error occurred: {str(e)}"
-        output = await perception_module.format_output(error_message, "text")
+        output = await perception_module.format_output(error_message, user_input_text,"text")
         await memory_module.add_chat_message(user_id, "SYSTEM", "USER", output.content)
-        return output
+        return output.content
 
-# Run continuous dialogue in terminal
+
+# Terminal interface
 async def main():
-    print("🤖 Welcome to the Social Media Agent Terminal Interface!")
-    print("Type 'exit' to quit.\n")
+    print("\n🤖 Welcome to the Social Media Agent Terminal!")
+    print("Type your request below. Type 'exit' to quit.\n")
 
     while True:
-        # Get user input from terminal
         user_text = input("👤 You: ").strip()
-
         if user_text.lower() in ["exit", "quit"]:
-            print("👋 Session ended.")
+            print("👋 Goodbye!")
             break
 
-        # Process input and return result
-        result = await process_user_input(user_text)
-        print(f"🤖 Agent: {result}\n")
+        response = await process_user_input(user_text)
+        print(f"\n🤖 Agent: {response}\n")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
