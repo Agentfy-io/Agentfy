@@ -126,6 +126,7 @@ class ActionModule:
             for step_index, step in enumerate(workflow.steps):
                 step_id = step.step_id
                 step_start_time = datetime.utcnow()
+                logger.info(f"➡️ Executing step **{step_index + 1} / {len(workflow.steps)}**: `{step.function_id}`...")
 
                 yield ExecutionResult(
                     workflow_id=workflow_id,
@@ -177,6 +178,13 @@ class ActionModule:
                     total_data_processed += full_step_result.metrics.data_processed
 
                     logger.info(f"{step_id} completed successfully")
+                    yield ExecutionResult(
+                        workflow_id=workflow_id,
+                        status="RUNNING",
+                        start_time=start_time,
+                        step_results=step_results,
+                        message=f"✅ Step **{step_index + 1} / {len(workflow.steps)}**: `{step.function_id}` completed successfully"
+                    )
 
                 except Exception as e:
                     logger.error(f"Error executing step {step_id}: {str(e)}")
