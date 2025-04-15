@@ -18,7 +18,7 @@ app = FastAPI(title="Social Media Agent API")
 # Models for API requests and responses
 class ProcessRequestModel(BaseModel):
     text: str
-    files: Optional[List[Dict[str, Any]]] = []
+    files: Optional[List[Dict[str, Any]]] = None
     user_id: str
     session_id: Optional[str] = None
 
@@ -39,13 +39,24 @@ reasoning = ReasoningModule()
 action = ActionModule()
 
 
-
+# Load agent registry
+async def get_agent_registry():
+    registry_path = os.getenv("AGENT_REGISTRY_PATH", "agents_registry.json")
+    try:
+        with open(registry_path, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Registry file not found at {registry_path}")
+        return {}
+    except json.JSONDecodeError:
+        print(f"Invalid JSON in registry file at {registry_path}")
+        return {}
 
 @app.post("/process")
 async def process_request(request: ProcessRequestModel, background_tasks: BackgroundTasks):
     """Process a user request and build a workflow."""
     try:
-        # Create UserInput model
+        # 1. Create UserInput model
         user_input = UserInput(
             text=request.text,
             files=request.files,
@@ -57,12 +68,12 @@ async def process_request(request: ProcessRequestModel, background_tasks: Backgr
             }
         )
 
-        # Validate and sanitize input
+        # 2. Validate and sanitize input
         validation_result = await perception.validate_input(user_input)
         if not validation_result.is_valid:
             return {"status": "error", "errors": validation_result.errors}
 
-        # Get chat history
+        # 2. Get chat history
         chat_history = await memory.get_user_chat_history(request.user_id)
 
         # Add request to chat history
@@ -223,5 +234,5 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-
+    # run on 127.0.0.1
     uvicorn.run(app, host="0.0.0.0", port=8000)
