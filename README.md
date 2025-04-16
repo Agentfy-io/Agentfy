@@ -14,7 +14,7 @@
 
 ## 📋 Overview
 
-**Agentfy** is a modular, multi-agent coordination platform purpose-built for automating tasks across social media ecosystems. Architected with a flexible **microservices control plane (MCP)**, the system enables intelligent workflow execution by leveraging **LLMs** to translate user intents into structured, goal-driven task chains.
+**Agentfy** is a modular, multi-agent coordination platform purpose-built for automating tasks across social media ecosystems. Architected with a flexible **Model Context Protocol (MCP)**, the system enables intelligent workflow execution by leveraging **LLMs** to translate user intents into structured, goal-driven task chains.
 
 Agentfy supports **multi-agent communication and collaboration**, allowing sub-agents to reason, perceive, and act together in real-time. It dynamically selects and routes requests to the most suitable agents and functions — no manual configuration needed.
 
