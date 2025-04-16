@@ -1,16 +1,92 @@
-# 🚀 Agentfy Developer Documentation
+<p align="center">
+  <img src="images/agentfy_logo.png" alt="My Photo" width="300" height="150">
+</p>
+
+# 🧠 Agentfy – Intelligent Multi-Agent Workflow Engine for Social Media
+
+[![Python](https://img.shields.io/badge/python-3.11+-yellow)](https://www.python.org/)
+[![GitHub stars](https://img.shields.io/github/stars/callmeiks/Agentfy.svg?style=social&label=Stars)](https://github.com/callmeiks/Agentfy)
+[![GitHub forks](https://img.shields.io/github/forks/callmeiks/Agentfy.svg?style=social&label=Forks)](https://github.com/callmeiks/Agentfy)
+[![GitHub issues](https://img.shields.io/github/issues/callmeiks/Agentfy.svg)](https://github.com/callmeiks/Agentfy/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/callmeiks/Agentfy/pulls)
+[![License](https://img.shields.io/github/license/callmeiks/Agentfy.svg)](https://github.com/callmeiks/Agentfy/blob/main/LICENSE)
+[![Made with ❤️](https://img.shields.io/badge/made%20with-%E2%9D%A4%EF%B8%8F-red)](https://github.com/callmeiks)
 
 ## 📋 Overview
 
-Agentfy is a modular microservices architecture designed to process user requests and execute workflows across multiple social media platforms. The system leverages LLM capabilities to dynamically match user needs with appropriate agents and functions.
+**Agentfy** is a modular, multi-agent coordination platform purpose-built for automating tasks across social media ecosystems. Architected with a flexible **microservices control plane (MCP)**, the system enables intelligent workflow execution by leveraging **LLMs** to translate user intents into structured, goal-driven task chains.
+
+Agentfy supports **multi-agent communication and collaboration**, allowing sub-agents to reason, perceive, and act together in real-time. It dynamically selects and routes requests to the most suitable agents and functions — no manual configuration needed.
+
+### 🧩 Agentfy Capabilities Table
+
+| **Feature** | **Description** | **Example Prompt** |
+|-------------|------------------|---------------------|
+| 🎯 **Buyer Targeting & Outreach** | Smartly identify potential buyers and initiate personalized interactions across TikTok, Instagram, and more. | *"Find me some customers on Instagram and TikTok who are interested in buying a kitchen knife set and DM them my shop's new product: ___."* |
+| 📢 **Cross-Platform Promotions** | Launch cross-platform promotions, generate ad content, and reach high-intent audiences at scale. | *"I'm hosting a hackathon at USC Viterbi. Here's my event info: ___. Can you send it to people on X and Instagram who may be interested, and also generate and post promo content across my accounts?"* |
+| 📝 **Content Transformation & Posting** | Transform ideas, videos, or trends into tailored posts, captions, and media across self-authorized accounts. | *“Here’s my new unboxing video. Add subtitles, generate platform-optimized captions, and post to YouTube Shorts, Instagram Reels, and TikTok. Tag relevant hashtags and track early performance.”* |
+| 🤖 **Automated Messaging & Support** | Reply to DMs, translate messages, and build 24/7 support flows in the customer's language. | *“Add a background task for me that automatically replies to customer DMs on TikTok and Instagram (make sure it's in the customer's language).”* |
+| 🧠 **Creator Discovery & Competitor Monitoring** | Discover creators to partner with and monitor rival strategies across key platforms. | *“Find 50 livestreamers or influencers on Instagram and TikTok who would be a good fit to advertise my pillow set, send them a campaign brief.”* |
+
+
+> **⚠️ Notes: Agentfy will integrating deeply with platforms like TikTok, Instagram, YouTube, X, Quora, WhatsApp, and more — ready to power the future of digital ops.**
 
 ## 🚦 Development Getting Started
 
-# Installation and Setup
+1. Clone the repository `git clone https://github.com/callmeiks/Agentfy.git `
+2. Navigate to the project directory `cd Agentfy`
+3. Install dependencies: `pip install -r requirements.txt`
+4. If you want to , please follow the instructions in the [➕ If You Need to Add New Sub Agents](#-if-you-need-to-add-new-sub-agents) section below.
+   - This is optional and not required for basic usage
+   - You can skip this step if you are just running the existing agents
+5. Set environment variables in `.env` file or update `config.py` (optional)
+   - Required API keys and configurations can be found in `config.py`
+   - Example `.env` file:
+     ```
+     OPENAI_API_KEY=your_key_here
+     X_API_KEY=your_key_here
+     X_API_SECRET=your_secret_here
+     YOUTUBE_API_KEY=your_key_here
+     ....
+     ```
 
-1. Clone the repository 
-2. Install dependencies: `pip install -r requirements.txt`
-3. Create or Update `agent_registry.json` file with available sub-agents and functions (Optional)
+> ⚠️ Notes: You need to obtain API keys for the respective platforms you want to interact with (e.g., TikTok, Twitter, YouTube, etc.) If you are having trouble getting the API keys, please contact us lqiu314@gmail.com
+
+## 🚀 Running the Program
+
+You can interact with the program in three different ways:
+
+### 1. Command Line Interface (CLI)
+```bash
+python run_agent_cli.py
+```
+- Runs the program in command-line interface mode
+- Useful for quick testing and debugging
+
+### 2. Streamlit Web Interface
+```bash
+streamlit run run_agent_app.py
+```
+- Runs the program with a Streamlit web interface
+- Access the interface at `http://localhost:8501`
+- User-friendly graphical interface
+
+### 3. FastAPI Web Interface (Currently Unavailable, Do Not Use!!)
+```bash
+python run_agent_api.py
+```
+- Runs the program as a FastAPI server
+- Access the web interface at `http://localhost:8000`
+- RESTful API for programmatic access
+
+> ⚠️ Note: The system is actively being improved. The author is currently adding more sub-agents and enhancing the overall accuracy and performance. Expect frequent updates and refinements.
+
+
+## ➕ If You Need to Add New Sub Agents....
+
+1. Create a new directory under `agents/` for the platform
+2. Implement agent functions in appropriate files (crawler, analysis, interactive),  you may reference existing agents for structure and functionality
+3. Update `agent_registry.json` file to include the new agent
    - Example:
      ```json
      {
@@ -45,171 +121,71 @@ Agentfy is a modular microservices architecture designed to process user request
        }
      }
      ```
-4. Set environment variables in `.env` file or update `config.py` (optional)
-   - Required API keys and configurations can be found in `config.py`
-   - Example `.env` file:
-     ```
-     OPENAI_API_KEY=your_key_here
-     X_API_KEY=your_key_here
-     X_API_SECRET=your_secret_here
-     YOUTUBE_API_KEY=your_key_here
-     ....
-     ```
-
-## Running the Program
-
-You can interact with the program in three different ways:
-
-### 1. Command Line Interface (CLI)
-```bash
-python run_agent_cli.py
-```
-- Runs the program in command-line interface mode
-- Interactive mode for direct user input
-- Useful for quick testing and debugging
-- Simple text-based interface
-
-### 2. FastAPI Web Interface (Currently Unavailable, Do not Use!)
-```bash
-python run_agent_api.py
-```
-- Runs the program as a FastAPI server
-- Access the web interface at `http://localhost:8000`
-- Available endpoints:
-  - `/process`: Process user requests
-  - `/workflow/{id}/status`: Check workflow status
-  - `/workflow/parameters`: Update workflow parameters
-  - `/workflow/{id}/result`: Get workflow results
-  - `/workflow/{id}/cancel`: Cancel a workflow
-- RESTful API for programmatic access
-
-### 3. Streamlit Web Interface
-```bash
-streamlit run run_agent_app.py
-```
-- Runs the program with a Streamlit web interface
-- Access the interface at `http://localhost:8501`
-- User-friendly graphical interface
-- Real-time updates and visual feedback
-- Interactive widgets for parameter input
-
-## Important Notes
-
-1. Some interactive agents may require additional setup:
-   - YouTube agents need OAuth2 authentication
-   - Twitter agents need API keys and access tokens
-   - Other platform-specific requirements may apply
-
-2. If you encounter errors during execution:
-   - Check your API keys and credentials
-   - Verify the agent registry configuration
-   - Ensure all required dependencies are installed
-   - Check the logs in the `logs` directory for detailed error messages
-
-3. The system is still in development, so some features may not be fully implemented or may change in future updates.
-
-## 🏗️ System Architecture
-
-```
-Agentfy/
-├── core/                    # Core system components
-│   ├── perception/             # Input validation & output formatting (Optimizing)
-│   ├── memory/                 # Data persistence & retrieval (Optimizing)
-│   ├── reasoning/              # Request analysis & workflow planning (Optimizing)
-│   ├── action/                 # Workflow execution (Optimizing)
-│   ├── monitoring/             # Execution monitoring (Under Development, Not Available)
-│   └── communication/          # Inter-agent communication (Under Development, Not Available)
-├── common/                  # Shared utilities 
-│   ├── ais/                    # AI utilities
-│   ├── models/                 # Data structures and communication models
-│   ├── security/               # Security utilities
-│   ├── utils/                  # Common utilities
-│   └── exceptions/             # Custom exceptions
-├── agents/                  # Platform-specific agents
-│   ├── tiktok/                 # TikTok agents
-│   ├── twitter/                # Twitter agents
-│   └── ...                     # Other platform agents
-├── config.py                # Configuration management 
-├── agents_registry.json     # Agent registry for available agents and functions
-├── requirements.txt         # Python dependencies
-├── README.md                # Documentation
-├── run_agent_cli.py         # CLI interface entry point
-├── run_agent_app.py         # Streamlit web interface entry point
-└── run_agent_api.py         # FastAPI interface entry point (Under Development)
-
-```
-
-## 🧩 Core Modules
-
-### 👁️ Perception Module
-
-> The Perception Module handles input validation and output formatting. It ensures that user requests are properly formatted and validated before being processed by the system.
-
-**Key Files**:
-- `module.py`: Main module functionality
-- `validators.py`: Input validation utilities (optional)
-- `formatters.py`: formatting outputs before sending them to the frontend (optional), e.g., JSON formatting, HTML sanitization.
-
-### 🤔 Reasoning Module
-
-> The Reasoning Module leverages ChatGPT to analyze user requests and determine the appropriate agents and steps needed to fulfill them. It passes the user request and agent registry to ChatGPT and receives a structured workflow in response.
-
-**Key Files**:
-- `module.py`: Main module functionality
-
-### ⚙️ Action Module
-
-> The Action Module takes the workflow output from the Reasoning Module and executes each step in sequence, finding and calling the appropriate agent functions.
-
-**Key Files**:
-- `module.py`: Main module functionality (simplified execution engine)
-
-## 🔧 Common Components
-
-### 📊 Models
-
-**Purpose**: Define data structures used throughout the system.
-
-**Key Files**:
-- `messages.py`: Message-related models, like message receives from users, messages sent to users, etc. (mostly for perception module)
-- `workflows.py`: Workflow-related models, like workflow definitions, execution results, etc. (mostly for reasoning and action modules)
-- `agents.py`: SubAgent-related models (used in action module and future communication module)
-
-### ⚠️ Exceptions
-
-**Purpose**: Define custom exceptions for error handling.
-
-**Key Files**:
-- `exceptions.py`: Custom exception hierarchy, including `AgentNotFound`, `WorkflowError`, etc.
-
-### 🛠️ Utils
-
-**Purpose**: Shared utility functions.
-
-**Key Files**:
-- `logging.py`: Structured logging
-- `helpers.py`: Common helper functions, e.g., date formatting, string manipulation
-
-### 🔒 Security
-
-**Purpose**: Security-related utilities.
-
-**Key Files**:
-- `validators.py`: Security validation utilities
-- `sanitizers.py`: Input sanitization utilities
-
-## 🤖 Agents
-
-Each social media platform has its own set of agents divided into categories:
-
-1. **Crawlers**: Data collection from social platforms
-2. **Analysis**: Data processing and insights generation
-3. **Interactive**: Actions that interact with social platforms
-
-## ➕ If You Need to Add New Sub Agents....
-
-1. Create a new directory under `agents/` for the platform
-2. Implement agent functions in appropriate files (crawler, analysis, interactive)
-3. Add agent definitions to the agent registry JSON
 4. The system will automatically incorporate these into workflows when appropriate
 
+> ⚠️ Note: Ensure that the new agent adheres to the existing structure and naming conventions for seamless integration. The system is designed to be modular, so you can easily **ADD / DELETE** new agents without modifying the core logic. If you have any questions or need assistance, feel free to reach out to the development team.
+
+
+
+## 🚀 Why Agentfy?
+
+**Agentfy** is a modular, AI-first multi-agent system that enables social media automation, user engagement, data intelligence, and content operations **across TikTok, Instagram, YouTube, X (Twitter), WhatsApp**, and more.
+
+It is built on a **flexible agent-based protocol**, allowing opaque apps to expose interfaces for agent-to-agent communication — unlocking new levels of productivity, creator support, and commerce automation.
+
+> 🧬 Agentfy is not just a tool. It's an **agent operating protocol** for the next generation of LLM-enabled applications.
+
+
+
+## 🧠 Agentfy as an Open Agent Protocol (Inspired by A2A + MCP)
+
+Agentfy is designed as more than just a workflow engine — it is a **prototype of an open agent protocol**, enabling seamless interoperability across intelligent systems, opaque apps, and task-oriented agents.
+
+Inspired by:
+
+- 🔁 [**Google’s A2A (Agents-to-Agents)**](https://github.com/google/A2A): agent endpoints that expose **capabilities** in a standardized, callable way  
+- 🧩 [**Anthropic’s Modular Control Plane (MCP)**](https://docs.anthropic.com/en/docs/agents-and-tools/mcp): orchestration layer that routes user goals to the best-suited agents or tools dynamically
+
+### 🔌 Vision
+
+Agentfy enables **inter-agent communication**, **function discovery**, and **LLM-to-agent routing** by acting as a lightweight **social operations protocol layer**. Our long-term goal is to establish:
+
+- 🧠 **Intent-to-action routing**: Convert natural language into modular, executable calls to real-world agents  
+- 🛰️ **Cross-platform orchestration**: Let one agent call another — e.g., "TikTok Agent" → "CRM Agent" → "Stripe Agent"  
+- 🌐 **Interoperability across closed ecosystems**: Bridge the gap between siloed platforms like TikTok, WhatsApp, Shopify, YouTube, etc.
+
+> Think: an open protocol layer that makes social agents interoperable, extensible, and pluggable — like HTTP for intelligent tools.
+
+### 🌱 Current Architecture Enables:
+
+- Dynamic loading of new agents via registry-based architecture  
+- Modular sub-agent pipelines (Perception, Reasoning, Action, Memory)  
+- Autonomous tool selection based on user input and agent registry functions  
+- Early groundwork for exposing agents as callable microservices (via CLI, Streamlit, or FastAPI)
+
+> 💡 Join us in prototyping what **agent interoperability** looks like — from buyer targeting to content transformation to commerce fulfillment.
+
+
+## 🙏 Sponsorship & Support
+This project is sponsor by [TikHub](https://tikhub.io), a platform that empower developers and businesses with seamless APIs to transform social media data into actionable insights.
+They support Data Access to TikTok, Douyin, Instagram, YouTube, X (Twitter), Xiaohongshu, Lemon8, Bilibili, and more.
+
+- **🏠 Home**: [https://www.tikhub.io](https://www.tikhub.io)
+- **👨‍💻 Github**: [https://github.com/TikHub](https://github.com/TikHub)
+- **⚡ Documents (Swagger UI)**: [https://api.tikhub.io](https://api.tikhub.io)
+- **🦊 Documents (Apifox UI)**: [https://docs.tikhub.io](https://docs.tikhub.io)
+- **🍱 SDK**: [https://github.com/TikHub/TikHub-API-Python-SDK](https://github.com/TikHub/TikHub-API-Python-SDK)
+- **🐙 Demo Code (GitHub)**: [https://github.com/TikHub/TikHub-API-Demo](https://github.com/TikHub/TikHub-API-Demo)
+- **📶 API Status**: [https://monitor.tikhub.io](https://monitor.tikhub.io)
+- **📧 Support**: [Discord Server](https://discord.gg/aMEAS8Xsvz)
+
+
+## 📬 Contact
+
+Have questions, want to contribute, or need help integrating Agentfy into your stack?
+
+Feel free to reach out:
+
+- 📧 **Email:** [lqiu314@gmail.com](mailto:lqiu314@gmail.com)
+- 🧑‍💻 **GitHub:** [@callmeiks](https://github.com/callmeiks)
+- 💡 Let's build the next generation of **agent-powered digital infrastructure** — together.
