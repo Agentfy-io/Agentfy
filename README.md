@@ -39,7 +39,7 @@ Agentfy supports **multi-agent communication and collaboration**, allowing sub-a
 4. If you want to , please follow the instructions in the [➕ If You Need to Add New Sub Agents](#-if-you-need-to-add-new-sub-agents) section below.
    - This is optional and not required for basic usage
    - You can skip this step if you are just running the existing agents
-5. Set environment variables in `.env` file or update `config.py` (optional)
+5. Set environment variables in `.env` file
    - Required API keys and configurations can be found in `config.py`
    - Example `.env` file:
      ```
