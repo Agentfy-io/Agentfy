@@ -9,7 +9,7 @@
 [![GitHub forks](https://img.shields.io/github/forks/callmeiks/Agentfy.svg?style=social&label=Forks)](https://github.com/callmeiks/Agentfy)
 [![GitHub issues](https://img.shields.io/github/issues/callmeiks/Agentfy.svg)](https://github.com/callmeiks/Agentfy/issues)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/callmeiks/Agentfy/pulls)
-[![License](https://img.shields.io/github/license/callmeiks/Agentfy.svg)](https://github.com/callmeiks/Agentfy/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/callmeiks/Agentfy/blob/main/LICENSE)
 [![Made with ❤️](https://img.shields.io/badge/made%20with-%E2%9D%A4%EF%B8%8F-red)](https://github.com/callmeiks)
 
 ## 📋 Overview
