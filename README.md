@@ -186,6 +186,6 @@ Have questions, want to contribute, or need help integrating Agentfy into your s
 
 Feel free to reach out:
 
-- 📧 **Email:** [lqiu314@gmail.com](mailto:lqiu314@gmail.com)
-- 🧑‍💻 **GitHub:** [@callmeiks](https://github.com/callmeiks)
+- 📧 **Email:** [lqiu314@gmail.com](mailto:lqiu314@gmail.com) OR [evil0ctal1985@gmail.com](mailto:evil0ctal1985@gmail.com) 
+- 🧑‍💻 **GitHub:** [@callmeiks](https://github.com/callmeiks) OR [@Evil0ctal](https://github.com/Evil0ctal)
 - 💡 Let's build the next generation of **agent-powered digital infrastructure** — together.
