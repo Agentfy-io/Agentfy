@@ -31,7 +31,7 @@ Agentfy supports **multi-agent communication and collaboration**, allowing sub-a
 
 > **⚠️ Notes: Agentfy will integrating deeply with platforms like TikTok, Instagram, YouTube, X, Quora, WhatsApp, and more — ready to power the future of digital ops.**
 
-## 🚦 Development Getting Started
+## 🚦 Getting Started
 
 1. Clone the repository `git clone https://github.com/callmeiks/Agentfy.git `
 2. Navigate to the project directory `cd Agentfy`
