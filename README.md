@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="images/agentfy_logo.png" alt="My Photo" width="300" height="150">
+  <img src="images/agentfy_logo.png" alt="logo" width="300" height="170">
 </p>
 
-# 🧠 Agentfy – Intelligent Multi-Agent Workflow Engine for Social Media
+# 🧠 Agentfy – Multi-Agent System for Social Media
 
 [![Python](https://img.shields.io/badge/python-3.11+-yellow)](https://www.python.org/)
 [![GitHub stars](https://img.shields.io/github/stars/callmeiks/Agentfy.svg?style=social&label=Stars)](https://github.com/callmeiks/Agentfy)
