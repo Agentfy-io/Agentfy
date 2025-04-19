@@ -537,7 +537,7 @@ async def fetch_live_search_results(keyword: str,
     return all_results
 
 
-async def fetch_music_detail(music_id: str) -> Dict:
+async def fetch_music_detail(music_id: str) -> List[Dict]:
     """
     Fetch details about a music track.
 
@@ -545,7 +545,7 @@ async def fetch_music_detail(music_id: str) -> Dict:
         music_id: TikTok music ID
     """
     result = await _make_app_request("fetch_music_detail", {"music_id": music_id})
-    return result.get("data", {}).get("music_info", {})
+    return [result.get("data", {}).get("music_info", {})]
 
 
 async def fetch_music_video_list(music_id: str,
