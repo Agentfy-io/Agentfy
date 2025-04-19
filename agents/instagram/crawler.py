@@ -4,9 +4,10 @@ import json
 import time
 from typing import Dict, List, Optional, Any, Union
 from urllib.parse import quote
+from config import settings
 
 # Constants
-API_KEY = "YOUR_API_KEY"  # Replace with your actual API key
+API_KEY = settings.tikhub_api_key
 BASE_URL = "https://api.tikhub.io/api/v1/instagram/web_app"
 HEADERS = {
     "accept": "application/json",
@@ -47,12 +48,13 @@ async def fetch_user_info_by_username(username: str) -> Dict:
 
 async def fetch_user_info(identifier: str, id_type: str = "username") -> List[Dict]:
     """
-    Fetch user information by username, user_id, or URL. (No url support yet)
+    Fetch user information by username, user_id. (No url support yet)
 
     Args:
         identifier: Username, user_id, or profile URL
         id_type: Type of identifier ('username', 'user_id')
     """
+
     if id_type == "username":
         result = await fetch_user_info_by_username(identifier)
         return [result]
@@ -172,7 +174,6 @@ async def fetch_user_reels(identifier: str, max_pages: int = 1, id_type: str = "
 
     Args:
         identifier: User ID or username
-        count: Number of reels per page
         max_pages: Maximum number of pages to fetch
         id_type: Type of identifier ('user_id' or 'username')
     """
@@ -380,7 +381,7 @@ async def search_hashtag_posts_by_keyword(keyword: str, feed_type: str = "top", 
 
     Args:
         keyword: Hashtag keyword (without #)
-        feed_type: Type of feed ('top' or 'recent')
+        feed_type: Type of feed ('top' or 'recent' or 'clips')
         max_pages: Maximum number of pages to fetch
     """
     endpoint = "fetch_hashtag_posts_by_keyword"
