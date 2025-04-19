@@ -334,6 +334,1430 @@
           }
         }
       ]
+    },
+    "tiktok": {
+      "crawlers": [
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "url_to_sec_user_id",
+          "description": "Convert a TikTok web profile URL to sec_user_id",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "str",
+              "description": "TikTok web profile URL",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "str",
+            "description": "User's sec_user_id"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "url_to_aweme_id",
+          "description": "Convert a TikTok video web URL to aweme_id",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "str",
+              "description": "TikTok video URL",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "str",
+            "description": "Video aweme_id"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "url_to_room_id",
+          "description": "Convert a TikTok web live room URL to room_id",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "str",
+              "description": "TikTok live room URL",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "str",
+            "description": "Live room ID"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "url_to_share_link",
+          "description": "Convert a TikTok web URL to a share link",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "str",
+              "description": "Original web URL to be shortened",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "str",
+            "description": "Shortened URL for sharing"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_shop_id_by_share_link",
+          "description": "Get TikTok shop ID/seller ID from a share link",
+          "parameters": [
+            {
+              "name": "share_link",
+              "type": "str",
+              "description": "TikTok shop share link",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "str",
+            "description": "TikTok shop ID/seller ID"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_product_id_by_share_link",
+          "description": "Get TikTok product ID from a share link",
+          "parameters": [
+            {
+              "name": "share_link",
+              "type": "str",
+              "description": "TikTok product share link",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "str",
+            "description": "TikTok product ID"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_user_profile",
+          "description": "Fetch TikTok user profile information.",
+          "parameters": [
+            {
+              "name": "sec_user_id",
+              "type": "Optional[str]",
+              "description": "User's sec_user_id",
+              "required": false
+            },
+            {
+              "name": "user_id",
+              "type": "Optional[str]",
+              "description": "User's uid",
+              "required": false
+            },
+            {
+              "name": "unique_id",
+              "type": "Optional[str]",
+              "description": "User's unique_id (username)",
+              "required": false
+            },
+            {
+              "name": "url",
+              "type": "Optional[str]",
+              "description": "User's web profile URL",
+              "required": false
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "Tiktok User profile information"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_user_post_videos",
+          "description": "Fetch videos posted by a TikTok user with pagination, only one of sec_user_id, user_id, unique_id, or url is required",
+          "parameters": [
+            {
+              "name": "sec_user_id",
+              "type": "Optional[str]",
+              "description": "User's sec_user_id",
+              "required": false
+            },
+            {
+              "name": "unique_id",
+              "type": "Optional[str]",
+              "description": "User's username",
+              "required": false
+            },
+            {
+              "name": "url",
+              "type": "Optional[str]",
+              "description": "User's web profile URL",
+              "required": false
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of videos per page",
+              "required": false,
+              "default": 20
+            },
+            {
+              "name": "sort_type",
+              "type": "int",
+              "description": "Sort type (0-Latest, 1-Hot)",
+              "required": false,
+              "default": 0
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of videos posted by the specified user"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_user_like_videos",
+          "description": "Fetch videos liked by a TikTok user with pagination",
+          "parameters": [
+            {
+              "name": "sec_user_id",
+              "type": "Optional[str]",
+              "description": "User's sec_user_id",
+              "required": false
+            },
+            {
+              "name": "url",
+              "type": "Optional[str]",
+              "description": "User's profile URL (optional, will be converted to sec_user_id)",
+              "required": false
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of videos per page",
+              "required": false,
+              "default": 20
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of videos liked by the specified user"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_one_video",
+          "description": "Fetch a single TikTok video by ID or URL",
+          "parameters": [
+            {
+              "name": "identifier",
+              "type": "str",
+              "description": "TikTok video ID or share URL",
+              "required": true
+            },
+            {
+              "name": "id_type",
+              "type": "str",
+              "description": "Type of identifier ('aweme_id' or 'share_url' or 'web_url')",
+              "required": true,
+              "default": "share_url"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List containing video information"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_video_comments",
+          "description": "Fetch comments on a TikTok video with pagination",
+          "parameters": [
+            {
+              "name": "aweme_id",
+              "type": "Optional[str]",
+              "description": "TikTok video ID",
+              "required": false
+            },
+            {
+              "name": "url",
+              "type": "Optional[str]",
+              "description": "TikTok video URL (optional, will be converted to aweme_id)",
+              "required": false
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of comments per page",
+              "required": false,
+              "default": 20
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of comments on the specified video"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_video_search_results",
+          "description": "Fetch TikTok video search results with pagination",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search keyword",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of results per page",
+              "required": false,
+              "default": 20
+            },
+            {
+              "name": "sort_type",
+              "type": "int",
+              "description": "Sort type (0-Latest, 1-Hot)",
+              "required": false,
+              "default": 0
+            },
+            {
+              "name": "publish_time",
+              "type": "int",
+              "description": "Filter by publish time (0-All time, 1-Last day, 7-Last week, 30-Last month, 90-Last 3 months, 180-Last 6 months)",
+              "required": false,
+              "default": 0
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of videos matching the search criteria"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_user_search_results",
+          "description": "Fetch TikTok user search results with pagination",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search keyword",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of results per page",
+              "required": false,
+              "default": 20
+            },
+            {
+              "name": "user_search_follower_count",
+              "type": "Optional[str]",
+              "description": "Filter by follower count (empty for unlimited, ZERO_TO_ONE_K, ONE_K_TO_TEN_K, etc.)",
+              "required": false
+            },
+            {
+              "name": "user_search_profile_type",
+              "type": "Optional[str]",
+              "description": "Filter by profile type (empty for unlimited, VERIFIED for verified users)",
+              "required": false
+            },
+            {
+              "name": "user_search_other_pref",
+              "type": "Optional[str]",
+              "description": "Additional search preferences (USERNAME to sort by username relevance)",
+              "required": false
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of users matching the search criteria"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_music_search_results",
+          "description": "Fetch TikTok music search results with pagination",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search keyword",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of results per page",
+              "required": false,
+              "default": 20
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of music tracks matching the search criteria"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_hashtag_search_results",
+          "description": "Fetch TikTok hashtag search results with pagination",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search keyword",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of results per page",
+              "required": false,
+              "default": 20
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of hashtags matching the search criteria"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_live_search_results",
+          "description": "Fetch TikTok live search results with pagination",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search keyword",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of results per page",
+              "required": false,
+              "default": 20
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of live rooms matching the search criteria"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_music_detail",
+          "description": "Fetch details about a TikTok music track",
+          "parameters": [
+            {
+              "name": "music_id",
+              "type": "str",
+              "description": "TikTok music ID",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "Details about the specified music track"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_music_video_list",
+          "description": "Fetch TikTok videos using a specific music track with pagination",
+          "parameters": [
+            {
+              "name": "music_id",
+              "type": "str",
+              "description": "TikTok music ID",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of videos per page",
+              "required": false,
+              "default": 10
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of videos using the specified music track"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_hashtag_detail",
+          "description": "Fetch details about a TikTok hashtag",
+          "parameters": [
+            {
+              "name": "ch_id",
+              "type": "str",
+              "description": "TikTok challenge/hashtag ID",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List containing details about the specified hashtag"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_hashtag_video_list",
+          "description": "Fetch TikTok videos using a specific hashtag with pagination",
+          "parameters": [
+            {
+              "name": "ch_id",
+              "type": "str",
+              "description": "TikTok challenge/hashtag ID",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of videos per page",
+              "required": false,
+              "default": 10
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of videos using the specified hashtag"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_user_follower_list",
+          "description": "Fetch a TikTok user's followers with pagination",
+          "parameters": [
+            {
+              "name": "sec_user_id",
+              "type": "Optional[str]",
+              "description": "User's sec_user_id",
+              "required": false
+            },
+            {
+              "name": "url",
+              "type": "Optional[str]",
+              "description": "User's profile URL (optional, will be converted to sec_user_id)",
+              "required": false
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of followers per page",
+              "required": false,
+              "default": 20
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of followers of the specified user"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_user_following_list",
+          "description": "Fetch accounts a TikTok user is following with pagination",
+          "parameters": [
+            {
+              "name": "sec_user_id",
+              "type": "Optional[str]",
+              "description": "User's sec_user_id",
+              "required": false
+            },
+            {
+              "name": "url",
+              "type": "Optional[str]",
+              "description": "User's web profile URL",
+              "required": false
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of following accounts per page",
+              "required": false,
+              "default": 20
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of accounts the specified user is following"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_live_room_info",
+          "description": "Fetch information about a TikTok live room",
+          "parameters": [
+            {
+              "name": "room_id",
+              "type": "Optional[str]",
+              "description": "TikTok live room ID",
+              "required": false
+            },
+            {
+              "name": "url",
+              "type": "Optional[str]",
+              "description": "TikTok live room URL (optional, will be converted to room_id)",
+              "required": false
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List containing information about the specified live room"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "check_live_room_online",
+          "description": "Check if a TikTok live room is currently online",
+          "parameters": [
+            {
+              "name": "room_id",
+              "type": "Optional[str]",
+              "description": "TikTok live room ID",
+              "required": false
+            },
+            {
+              "name": "url",
+              "type": "Optional[str]",
+              "description": "TikTok live room URL (optional, will be converted to room_id)",
+              "required": false
+            }
+          ],
+          "returns": {
+            "type": "bool",
+            "description": "True if the live room is online, False otherwise"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_location_search",
+          "description": "Search for TikTok locations by keyword",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Location keyword",
+              "required": true
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of results per page",
+              "required": false,
+              "default": 10
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of locations matching the search criteria"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_product_detail",
+          "description": "Get detailed information about a TikTok Shop product",
+          "parameters": [
+            {
+              "name": "product_id",
+              "type": "Optional[str]",
+              "description": "TikTok product ID",
+              "required": false
+            },
+            {
+              "name": "product_url",
+              "type": "Optional[str]",
+              "description": "TikTok product URL",
+              "required": false
+            },
+            {
+              "name": "region",
+              "type": "str",
+              "description": "Region code",
+              "required": false,
+              "default": "US"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List containing detailed information about the specified product"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_shop_product_list",
+          "description": "Get a list of products from a TikTok Shop with pagination, only one of seller_id or share_url is required",
+          "parameters": [
+            {
+              "name": "seller_id",
+              "type": "Optional[str]",
+              "description": "TikTok seller ID",
+              "required": false
+            },
+            {
+              "name": "share_url",
+              "type": "Optional[str]",
+              "description": "TikTok shop share URL",
+              "required": false
+            },
+            {
+              "name": "page_size",
+              "type": "int",
+              "description": "Number of products per page",
+              "required": false,
+              "default": 10
+            },
+            {
+              "name": "sort_field",
+              "type": "int",
+              "description": "Sort field (1-Default)",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "sort_order",
+              "type": "int",
+              "description": "Sort order (0-Ascending, 1-Descending)",
+              "required": false,
+              "default": 0
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of products from the specified TikTok Shop"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_shop_product_category",
+          "description": "Get product categories from a TikTok Shop, only one of seller_id or share_url is required",
+          "parameters": [
+            {
+              "name": "seller_id",
+              "type": "Optional[str]",
+              "description": "TikTok seller ID",
+              "required": false
+            },
+            {
+              "name": "share_url",
+              "type": "Optional[str]",
+              "description": "TikTok shop share URL",
+              "required": false
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of product categories from the specified TikTok Shop"
+          }
+        },
+        {
+          "agent_id": "tiktok_crawler",
+          "function_id": "fetch_creator_info",
+          "description": "Get information about a TikTok creator",
+          "parameters": [
+            {
+              "name": "creator_uid",
+              "type": "str",
+              "description": "TikTok creator user ID",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "Information about the specified TikTok creator, including live info, commercial info, and shop info"
+          }
+        }
+      ],
+      "analysis": [
+        {
+          "agent_id": "tiktok_analysis",
+          "function_id": "clean_raw_data",
+          "description": "Cleans and filters raw TikTok data based on user intent by selecting only relevant fields",
+          "parameters": [
+            {
+              "name": "tiktok_data",
+              "type": "List[Dict]",
+              "description": "Raw TikTok data as a list of dictionaries, typically retrieved from TikTok crawlers",
+              "required": true
+            },
+            {
+              "name": "user_request",
+              "type": "str",
+              "description": "A natural language request describing what kind of data or fields the user is interested in",
+              "required": true
+            },
+            {
+              "name": "next_step",
+              "type": "str",
+              "description": "Description that contains the essential parameters for the next step in the workflow",
+              "required": false
+            }
+          ],
+          "returns": {
+            "type": "List[Any]",
+            "description": "Cleaned TikTok data containing only the field or fields relevant to the user's request"
+          }
+        }
+      ]
+    },
+    "instagram": {
+      "crawlers": [
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_user_info",
+          "description": "Fetch Instagram user information by username, user_id (No URL support yet)",
+          "parameters": [
+            {
+              "name": "identifier",
+              "type": "str",
+              "description": "Username or user_id",
+              "required": true
+            },
+            {
+              "name": "id_type",
+              "type": "str",
+              "description": "Type of identifier ('username', 'user_id')",
+              "required": true,
+              "default": "username"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "User profile information, including user_id, username, full_name, profile_pic_url, followers_count, following_count, and biography"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_user_followers",
+          "description": "Fetch an Instagram user's followers by username with pagination (each page contains 50 items)",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "str",
+              "description": "Instagram username",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of followers of the specified user"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_user_following",
+          "description": "Fetch accounts an Instagram user is following with pagination (each page contains 50 items)",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "str",
+              "description": "Instagram username",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of accounts the specified user is following"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_user_posts",
+          "description": "Fetch Instagram user posts with pagination",
+          "parameters": [
+            {
+              "name": "user_id",
+              "type": "str",
+              "description": "Instagram user ID",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of posts from the specified user"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_user_reels",
+          "description": "Fetch Instagram user reels with pagination",
+          "parameters": [
+            {
+              "name": "identifier",
+              "type": "str",
+              "description": "User ID or username",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "id_type",
+              "type": "str",
+              "description": "Type of identifier ('user_id' or 'username')",
+              "required": true,
+              "default": "user_id"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of reels from the specified user"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_user_stories",
+          "description": "Fetch an Instagram user's stories by username",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "str",
+              "description": "Instagram username",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of stories from the specified user"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_user_highlights",
+          "description": "Fetch an Instagram user's highlights by username",
+          "parameters": [
+            {
+              "name": "username",
+              "type": "str",
+              "description": "Instagram username",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of highlights from the specified user"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_user_posts_and_reels",
+          "description": "Fetch Instagram user posts and reels with pagination",
+          "parameters": [
+            {
+              "name": "identifier",
+              "type": "str",
+              "description": "Username or profile URL",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "id_type",
+              "type": "str",
+              "description": "Type of identifier ('username' or 'url')",
+              "required": true,
+              "default": "username"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of posts and reels from the specified user"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_user_tagged_posts",
+          "description": "Fetch posts where an Instagram user is tagged with pagination",
+          "parameters": [
+            {
+              "name": "identifier",
+              "type": "str",
+              "description": "User ID or username",
+              "required": true
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "Number of posts per page",
+              "required": false,
+              "default": 12
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "id_type",
+              "type": "str",
+              "description": "Type of identifier ('user_id' or 'username')",
+              "required": true,
+              "default": "user_id"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of posts where the specified user is tagged"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_similar_accounts",
+          "description": "Fetch similar accounts by username or user ID (No URL support yet)",
+          "parameters": [
+            {
+              "name": "identifier",
+              "type": "str",
+              "description": "Username or user ID",
+              "required": true
+            },
+            {
+              "name": "id_type",
+              "type": "str",
+              "description": "Type of identifier ('username' or 'userid')",
+              "required": true,
+              "default": "username"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of similar accounts to the specified user"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "search_reels_by_keyword",
+          "description": "Search for Instagram reels by keyword",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search term",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of reels matching the search term"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "search_hashtags_by_keyword",
+          "description": "Search for Instagram hashtags by keyword",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search term",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of hashtags matching the search term"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "search_hashtag_posts_by_keyword",
+          "description": "Fetch Instagram posts for a hashtag with pagination",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Hashtag keyword (without #)",
+              "required": true
+            },
+            {
+              "name": "feed_type",
+              "type": "str",
+              "description": "Type of feed ('top' for top posts, 'recent' for recent posts, 'clips' for show only Reels)",
+              "required": false,
+              "default": "top"
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of posts related to the specified hashtag"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "search_audios_by_keyword",
+          "description": "Search for Instagram audio tracks by keyword",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search term",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of audio tracks matching the search term"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "search_locations_by_keyword",
+          "description": "Search for Instagram locations by keyword",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search term",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of locations that are related to the search term"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "search_users_by_keyword",
+          "description": "Search for Instagram users by keyword (tries v1 first, falls back to v2)",
+          "parameters": [
+            {
+              "name": "keyword",
+              "type": "str",
+              "description": "Search term",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of users related to the search term"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_post_info",
+          "description": "Fetch general information about an Instagram post by web URL or post ID",
+          "parameters": [
+            {
+              "name": "identifier",
+              "type": "str",
+              "description": "Post web URL or post ID",
+              "required": true
+            },
+            {
+              "name": "id_type",
+              "type": "str",
+              "description": "Type of identifier ('url' or 'post_id')",
+              "required": true,
+              "default": "url"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "Post information including post ID, user ID, media type, media URL, and caption, and more fields if available"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_post_details",
+          "description": "Fetch detailed information about an Instagram post by web URL or code (not supporting post_id)",
+          "parameters": [
+            {
+              "name": "identifier",
+              "type": "str",
+              "description": "Post web URL or code",
+              "required": true
+            },
+            {
+              "name": "id_type",
+              "type": "str",
+              "description": "Type of identifier ('url' or 'code')",
+              "required": true,
+              "default": "url"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "Detailed post information, including post ID, user ID, media type, media URL, caption, and more fields if available"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_music_related_posts",
+          "description": "Fetch Instagram posts related to specific music",
+          "parameters": [
+            {
+              "name": "music_id",
+              "type": "str",
+              "description": "Music ID",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of posts related to the specified music"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_location_posts",
+          "description": "Fetch Instagram posts from a specific location with pagination",
+          "parameters": [
+            {
+              "name": "location_id",
+              "type": "str",
+              "description": "Location ID",
+              "required": true
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            },
+            {
+              "name": "type",
+              "type": "str",
+              "description": "Type of feed ('recent' or 'ranked')",
+              "required": false,
+              "default": "recent"
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of posts from the specified location"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_post_comments",
+          "description": "Fetch comments on an Instagram post with pagination (each page contains 5 items)",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "str",
+              "description": "Post URL",
+              "required": true
+            },
+            {
+              "name": "sort_type",
+              "type": "str",
+              "description": "Sort order ('recent' for most recent, 'popular' for most popular)",
+              "required": false,
+              "default": "recent"
+            },
+            {
+              "name": "max_pages",
+              "type": "int",
+              "description": "Maximum number of pages to fetch",
+              "required": false,
+              "default": 1
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of comments on the specified post"
+          }
+        },
+        {
+          "agent_id": "instagram_crawler",
+          "function_id": "fetch_post_likes",
+          "description": "Fetch likes on an Instagram post by URL",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "str",
+              "description": "Post URL",
+              "required": true
+            }
+          ],
+          "returns": {
+            "type": "List[Dict]",
+            "description": "List of likes on the specified post"
+          }
+        }
+      ],
+      "analysis": [
+        {
+          "agent_id": "instagram_analysis",
+          "function_id": "clean_raw_data",
+          "description": "Cleans and filters raw Instagram data based on user intent by selecting only relevant fields",
+          "parameters": [
+            {
+              "name": "instagram_data",
+              "type": "List[Dict]",
+              "description": "Raw Instagram data as a list of dictionaries, typically retrieved from Instagram crawlers",
+              "required": true
+            },
+            {
+              "name": "user_request",
+              "type": "str",
+              "description": "A natural language request describing what kind of data or fields the user is interested in",
+              "required": true
+            },
+            {
+              "name": "next_step",
+              "type": "str",
+              "description": "Description that contains the essential parameters for the next step in the workflow",
+              "required": false
+            }
+          ],
+          "returns": {
+            "type": "List[Any]",
+            "description": "Cleaned Instagram data containing only the field or fields relevant to the user's request"
+          }
+        }
+      ]
     }
   }
 }
