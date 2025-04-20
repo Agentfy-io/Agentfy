@@ -132,7 +132,7 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
             output_format = "text"
 
         # On success, return the result
-        output = await perception_module.format_output(final_result.output.output, user_input_text, output_format)
+        output = await perception_module.format_output(final_result, user_input_text, output_format)
         await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
 
         logger.info(f"Workflow executed successfully!")
