@@ -29,6 +29,97 @@ async def _make_request(endpoint: str, params: Optional[Dict] = None) -> Dict:
         logger.error(f"Request error: {e}")
         return {"error": str(e)}
 
+async def fetch_tweet_detail(tweet_id: str) -> List[Dict]:
+    """
+    Fetch detailed information about a specific tweet.
+
+    Args:
+        tweet_id: ID of the tweet to retrieve
+    """
+    result = await _make_request("fetch_tweet_detail", {"tweet_id": tweet_id})
+    return [result.get("data")]
+
+
+async def fetch_user_profile(screen_name: Optional[str] = None, rest_id: Optional[str] = None) -> List[Dict]:
+    """
+    Fetch a user's profile information.
+
+    Args:
+        screen_name: Twitter username (handle without @)
+        rest_id: Twitter user ID (numeric)
+
+    Note:
+        At least one parameter must be provided.
+        If both are provided, rest_id takes precedence.
+    """
+    if not screen_name and not rest_id:
+        return []
+
+    params = {}
+    if screen_name:
+        params["screen_name"] = screen_name
+    if rest_id:
+        params["rest_id"] = rest_id
+
+    result = await _make_request("fetch_user_profile", params)
+    return [result.get("data")]
+
+
+async def fetch_user_tweets(screen_name: str, cursor: Optional[str] = None, max_pages: int = 1) -> List[Dict]:
+    endpoint = "fetch_user_post_tweet"
+    params = {"screen_name": screen_name}
+    all_tweets = []
+
+    for _ in range(max_pages):
+        if cursor:
+            params["cursor"] = cursor
+
+        response = await _make_request(endpoint, params)
+        if "error" in response:
+            break
+
+        data = response.get("data", {})
+        all_tweets.extend(data.get("timeline", []))
+
+        cursor = data.get("next_cursor")
+        if not cursor:
+            break
+        await asyncio.sleep(RATE_LIMIT_DELAY)
+
+    return all_tweets
+
+
+async def fetch_post_comments(tweet_id: str, max_pages: int = 1) -> List[Dict]:
+    """
+    Fetch comments on a tweet with pagination.
+
+    Args:
+        tweet_id: ID of the tweet
+        max_pages: Maximum number of pages to fetch
+    """
+    endpoint = "fetch_post_comments"
+    params = {"tweet_id": tweet_id}
+    all_comments = []
+    cursor = None
+
+    for _ in range(max_pages):
+        if cursor:
+            params["cursor"] = cursor
+
+        response = await _make_request(endpoint, params)
+        if "error" in response:
+            break
+
+        comments = response.get("data", {}).get("thread", [])
+        all_comments.extend(comments)
+
+        cursor = response.get("data", {}).get("next_cursor")
+        if not cursor:
+            break
+        await asyncio.sleep(RATE_LIMIT_DELAY)
+
+    return all_comments
+
 
 async def fetch_search_posts(keyword: str, search_type: str = "Top", max_pages: int = 1) -> List[Dict]:
     endpoint = "fetch_search_timeline"
@@ -57,55 +148,6 @@ async def fetch_search_posts(keyword: str, search_type: str = "Top", max_pages: 
     return all_results
 
 
-async def fetch_user_tweets(screen_name: str, cursor: Optional[str] = None, max_pages: int = 1) -> List[Dict]:
-    endpoint = "fetch_user_post_tweet"
-    params = {"screen_name": screen_name}
-    all_tweets = []
-
-    for _ in range(max_pages):
-        if cursor:
-            params["cursor"] = cursor
-
-        response = await _make_request(endpoint, params)
-        if "error" in response:
-            break
-
-        data = response.get("data", {})
-        all_tweets.extend(data.get("tweets", []))
-        all_tweets.extend(data.get("timeline", []))
-
-        cursor = data.get("next_cursor")
-        if not cursor:
-            break
-        await asyncio.sleep(RATE_LIMIT_DELAY)
-
-    return all_tweets
-
-
-async def fetch_tweets_comments(tweet_id: str, cursor: Optional[str] = None, max_pages: int = 1) -> List[Dict]:
-    endpoint = "fetch_tweet_comments"
-    params = {"tweet_id": tweet_id}
-    all_comments = []
-
-    for _ in range(max_pages):
-        if cursor:
-            params["cursor"] = cursor
-
-        response = await _make_request(endpoint, params)
-        if "error" in response:
-            break
-
-        comments = response.get("data", {}).get("comments", [])
-        all_comments.extend(comments)
-
-        cursor = response.get("data", {}).get("next_cursor")
-        if not cursor:
-            break
-        await asyncio.sleep(RATE_LIMIT_DELAY)
-
-    return all_comments
-
-
 async def fetch_trending_topics(country: str = "UnitedStates") -> List[Dict]:
     endpoint = "fetch_trending"
     params = {"country": country}
@@ -115,10 +157,11 @@ async def fetch_trending_topics(country: str = "UnitedStates") -> List[Dict]:
     return response.get("data", {}).get("trends", [])
 
 
-async def fetch_user_followers(screen_name: str, cursor: Optional[str] = None, max_pages: int = 1) -> List[Dict]:
+async def fetch_user_followers(screen_name: str, max_pages: int = 1) -> List[Dict]:
     endpoint = "fetch_user_followers"
     params = {"screen_name": screen_name}
     all_followers = []
+    cursor = None
 
     for _ in range(max_pages):
         if cursor:
@@ -138,6 +181,163 @@ async def fetch_user_followers(screen_name: str, cursor: Optional[str] = None, m
         await asyncio.sleep(RATE_LIMIT_DELAY)
 
     return all_followers
+
+
+async def fetch_latest_post_comments(tweet_id: str, max_pages: int = 1) -> List[Dict]:
+    """
+    Fetch the latest comments on a tweet (no pagination).
+
+    Args:
+        tweet_id: ID of the tweet
+        max_pages: Maximum number of pages to fetch
+    """
+    endpoint = "fetch_latest_post_comments"
+    params = {"tweet_id": tweet_id}
+    all_comments = []
+    cursor = None
+
+    for _ in range(max_pages):
+        if cursor:
+            params["cursor"] = cursor
+
+        response = await _make_request(endpoint, params)
+        if "error" in response:
+            break
+
+        comments = response.get("data", {}).get("timline", [])
+        all_comments.extend(comments)
+
+        cursor = response.get("data", {}).get("next_cursor")
+        if not cursor:
+            break
+        await asyncio.sleep(RATE_LIMIT_DELAY)
+
+    return all_comments
+
+
+async def fetch_user_tweet_replies(screen_name: str, max_pages: int = 1) -> List[Dict]:
+    """
+    Fetch replies posted by a user with pagination.
+
+    Args:
+        screen_name: Twitter username (handle without @)
+        max_pages: Maximum number of pages to fetch
+    """
+    endpoint = "fetch_user_tweet_replies"
+    params = {"screen_name": screen_name}
+    all_replies = []
+    cursor = None
+
+    for _ in range(max_pages):
+        if cursor:
+            params["cursor"] = cursor
+
+        response = await _make_request(endpoint, params)
+        if "error" in response:
+            break
+
+        replies = response.get("data", {}).get("timeline", [])
+        all_replies.extend(replies)
+
+        cursor = response.get("data", {}).get("next_cursor")
+        if not cursor:
+            break
+        await asyncio.sleep(RATE_LIMIT_DELAY)
+
+    return all_replies
+
+
+async def fetch_user_media(screen_name: Optional[str] = None, rest_id: Optional[str] = None) -> List[Dict]:
+    """
+    Fetch media tweets posted by a user.
+
+    Args:
+        screen_name: Twitter username (handle without @)
+        rest_id: Twitter user ID (numeric)
+
+    Note:
+        At least one parameter must be provided.
+        If both are provided, rest_id takes precedence.
+    """
+    if not screen_name and not rest_id:
+        return []
+
+    params = {}
+    if screen_name:
+        params["screen_name"] = screen_name
+    if rest_id:
+        params["rest_id"] = rest_id
+
+    response = await _make_request("fetch_user_media", params)
+    if "error" in response:
+        return []
+
+    return response.get("data", {}).get("timeline", [])
+
+
+async def fetch_retweet_user_list(tweet_id: str, max_pages: int = 1) -> List[Dict]:
+    """
+    Fetch users who retweeted a tweet with pagination.
+
+    Args:
+        tweet_id: ID of the tweet
+        max_pages: Maximum number of pages to fetch
+    """
+    endpoint = "fetch_retweet_user_list"
+    params = {"tweet_id": tweet_id}
+    all_users = []
+    cursor = None
+
+    for _ in range(max_pages):
+        if cursor:
+            params["cursor"] = cursor
+
+        response = await _make_request(endpoint, params)
+        if "error" in response:
+            break
+
+        users = response.get("data", {}).get("retweets", [])
+        all_users.extend(users)
+
+        cursor = response.get("data", {}).get("next_cursor")
+        if not cursor:
+            break
+        await asyncio.sleep(RATE_LIMIT_DELAY)
+
+    return all_users
+
+
+async def fetch_user_followings(screen_name: str, max_pages: int = 1) -> List[Dict]:
+    """
+    Fetch users followed by a user with pagination.
+
+    Args:
+        screen_name: Twitter username (handle without @)
+        max_pages: Maximum number of pages to fetch
+    """
+    endpoint = "fetch_user_followings"
+    params = {"screen_name": screen_name}
+    all_followings = []
+    cursor = None
+
+    for _ in range(max_pages):
+        if cursor:
+            params["cursor"] = cursor
+
+        response = await _make_request(endpoint, params)
+        if "error" in response:
+            break
+
+        followings = response.get("data", {}).get("followings", [])
+        all_followings.extend(followings)
+
+        cursor = response.get("data", {}).get("next_cursor")
+        more_users = response.get("data", {}).get("more_users", False)
+        if not cursor or not more_users:
+            break
+        await asyncio.sleep(RATE_LIMIT_DELAY)
+
+    return all_followings
 
 
 async def save_to_json(data: Any, filename: str) -> None:
