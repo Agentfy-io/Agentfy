@@ -1,78 +1,83 @@
 import json
 import pandas as pd
-# import pandasai as pai
 from typing import List, Dict, Any
 
 from common.ais.chatgpt import ChatGPT
 from common.utils.logging import setup_logger
 
+import pandasai as pai
+
+from config import settings
+
 logger = setup_logger(__name__)
 
+pai.api_key.set(settings.pandas_api_key)
 
-async def clean_raw_data(user_request: str, tweet_data: List[Dict], next_step: str = None ) -> List[Any]:
+async def clean_raw_data(user_request: str, x_data: List[Dict], next_step: str = None) -> Any:
     """
-    Clean raw tweet data based on user's request using GPT to select relevant keys.
+    Clean raw x data dynamically based on user's request.
+    Step 1: Use ChatGPT to generate a PandasAI prompt.
+    Step 2: Use pandasai (pai.DataFrame) to process the data according to the prompt.
 
     Args:
-        user_request: User's request for data cleaning.
-        tweet_data: Raw tweet data (list of dictionaries).
-        next_step: The next step in the workflow that requires specific parameters.
+        user_request: Description of the data cleaning request.
+        x_data: Raw x data (list of dicts).
+        next_step: Description of the next step and its expected parameters.
 
     Returns:
-        Cleaned data (list of dictionaries with only relevant keys).
+        Cleaned data (could be a list, dict, DataFrame, or any type depending on user request).
     """
-    # Convert raw data to DataFrame, make sure nested structures are flattened
+    # Convert raw data to pandas DataFrame
     try:
-        df = pd.json_normalize(tweet_data)
+        df_raw = pd.json_normalize(x_data)
+        df_raw.columns = df_raw.columns.str.replace(r'\W+', '_', regex=True)  # <=== ✨ 加这一行
     except Exception as e:
         logger.error(f"Failed to create DataFrame: {e}")
-        return []
+        return None
 
-    # Get the list of keys (columns) in the DataFrame
-    list_keys = df.columns.tolist()
+    logger.info(df_raw.columns.tolist())
 
-    # Generate GPT prompts
+    # Prepare for pandasai
+    df = pai.DataFrame(df_raw)
+
+    # Ask ChatGPT to generate a smart PandasAI prompt
     system_prompt = (
-        "You are a data cleaning assistant. Your task is to determine which key(s) from tweet data are needed for the next step in a processing workflow. "
-        "You will be given: (1) a user request, (2) a list of available keys from the data, and (3) a dictionary describing the next step and its expected parameters. "
-        "It's possible that there's no next step, so you will only need to analyze 1 and 2. "
-        "Select only the key or keys that are relevant to both the user’s intent and the requirements of the next step. "
-        "Determine how many keys to select based on the type of the next step’s parameter: "
-        "if it expects a List[str] or List[int] or List[bool] or List[float], then select one key; "
-        "if it expects a List[Dict], then select multiple keys corresponding to fields in the dict. "
-        "Your response must be a pure JSON list of the selected keys, with no explanations or extra text."
+        "You are a prompt engineer specializing in generating instructions for pandasai (an AI tool for DataFrames). "
+        "Your task is to create a clear, direct instruction for pandasai to select specific column(s) and filter rows, "
+        "based only on numeric comparisons (>, <, >=, <=, ==) according to (1) user request, (2) available data columns, and (3) an optional next step.\n\n"
+        "Constraints:\n"
+        "- Always explicitly mention the selected column(s) from the available columns.\n"
+        "- Only numeric/date filtering is allowed; do not perform any text matching, substring search, or regular expression operations.\n"
+        "- If user request involves non-numeric columns, politely ignore and focus only on numeric or date column filtering.\n"
+        "- Keep the generated instruction actionable and concise.\n"
+        "- Output ONLY the pure instruction text without any extra commentary or explanations."
     )
 
     user_prompt = (
-        f"User request: {user_request}\n\n"
-        f"Available keys: {list_keys}\n\n"
-        f"Next step and required parameters: {next_step}\n\n"
-        f"Please return a JSON array (e.g., [\"key1\", \"key2\"]) of relevant key or keys."
+        f"User request:\n{user_request}\n\n"
+        f"Available columns:\n{df_raw.columns.tolist()}\n\n"
+        f"Next step:\n{next_step}\n\n"
+        "Now build the instruction text for pandasai."
     )
 
-    # Call GPT
     chatgpt = ChatGPT()
-    response = await chatgpt.chat(system_prompt, user_prompt)
-    content = response['response']["choices"][0]["message"]["content"].strip()
 
     try:
-        relevant_keys = json.loads(content)
-        logger.info(f"GPT selected keys: {relevant_keys}")
-    except json.JSONDecodeError:
-        logger.error("Failed to parse GPT response as JSON list")
-        return []
+        response = await chatgpt.chat(system_prompt, user_prompt)
+        pandasai_prompt = response['response']["choices"][0]["message"]["content"].strip()
+        logger.info(f"Generated PandasAI prompt: {pandasai_prompt}")
+    except Exception as e:
+        logger.error(f"Failed to generate PandasAI prompt: {e}")
+        return None
 
-    # Return cleaned data
-    if len(relevant_keys) == 1:
-        # find the type of the item of the list
-        item_type = type(df[relevant_keys[0]].iloc[0])
-        # Return a list of the first column with the correct type
-        cleaned_df = df[relevant_keys[0]].fillna("").astype(item_type).tolist()
-    else:
-        # Return a list of dicts with only relevant keys, remove rows with all NaN values
-        df = df.dropna(how='all')
-        # TODO： if the number of rows is too large, we should sample the data
-        df = df.head(10)
-        cleaned_df = df[relevant_keys].fillna("").to_dict(orient="records")
+    # Use pandasai DataFrame to execute the prompt
+    try:
+        cleaned_output = df.chat(pandasai_prompt)
+        logger.info("PandasAI data cleaning completed successfully.")
+    except Exception as e:
+        logger.error(f"PandasAI execution failed: {e}")
+        return None
 
-    return cleaned_df
+    # logger.info(f"Cleaned output: {cleaned_output}")
+
+    return cleaned_output
