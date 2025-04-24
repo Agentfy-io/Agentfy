@@ -12,6 +12,8 @@ logger = setup_logger(__name__)
 API_KEY = settings.tikhub_api_key
 BASE_URL_APP = "https://api.tikhub.io/api/v1/douyin/app/v3"
 BASE_URL_WEB = "https://api.tikhub.io/api/v1/douyin/web"
+BASE_URL_BILLBOARD = "https://api.tikhub.io/api/v1/douyin/billboard"
+BASE_URL_XINGTU = "https://api.tikhub.io/api/v1/douyin/xingtu"
 HEADERS = {
     "accept": "application/json",
     "Authorization": f"Bearer {API_KEY}"
@@ -25,7 +27,7 @@ async def _make_request(base_url: str, endpoint: str, method: str = "GET", param
     Make a request to the TikHub API.
 
     Args:
-        base_url: Base URL for the API (app or web)
+        base_url: Base URL for the API (app or web or billboard or xingtu)
         endpoint: API endpoint
         method: HTTP method (GET or POST)
         params: Query parameters for GET requests
@@ -1502,6 +1504,338 @@ async def fetch_challenge_posts(challenge_id: str, sort_type: int, cookie: Optio
         await asyncio.sleep(RATE_LIMIT_DELAY)
 
     return all_posts
+
+
+# XingTu Functions - for influencer/KOL analytics
+async def get_xingtu_kolid(uid: Optional[str] = None, sec_user_id: Optional[str] = None,
+                           unique_id: Optional[str] = None) -> str:
+    """
+    Get XingTu kolid by Douyin identifier (uid, sec_user_id, or unique_id).
+
+    Args:
+        uid: Douyin user ID
+        sec_user_id: Douyin sec_user_id
+        unique_id: Douyin unique_id (username)
+
+    Returns:
+        XingTu kolid
+
+    Note:
+        At least one parameter must be provided.
+        If multiple parameters are provided, sec_user_id is prioritized, followed by uid, and then unique_id.
+    """
+    if sec_user_id:
+        result = await _make_request(BASE_URL_XINGTU, "get_xingtu_kolid_by_sec_user_id",
+                                     params={"sec_user_id": sec_user_id})
+    elif uid:
+        result = await _make_request(BASE_URL_XINGTU, "get_xingtu_kolid_by_uid",
+                                     params={"uid": uid})
+    elif unique_id:
+        result = await _make_request(BASE_URL_XINGTU, "get_xingtu_kolid_by_unique_id",
+                                     params={"unique_id": unique_id})
+    else:
+        return ""
+
+    return result.get("data", {}).get("core_user_id", "")
+
+
+async def fetch_kol_base_info(kol_id: str, platform_channel: str = "_1") -> Dict:
+    #TODO : this endpoint needs to be fixed or updated
+    """
+    Get KOL base information.
+
+    Args:
+        kol_id: XingTu KOL ID
+        platform_channel: Platform channel (_1: Douyin Video, _10: Douyin Live)
+
+    Returns:
+        KOL base information
+    """
+    params = {
+        "kolId": kol_id,
+        "platformChannel": platform_channel
+    }
+
+    result = await _make_request(BASE_URL_XINGTU, "kol_base_info_v1", params=params)
+    return result.get("data", {})
+
+
+async def fetch_kol_audience_portrait(kol_id: str) -> Dict:
+    #TODO : this endpoint needs to be fixed or updated
+    """
+    Get KOL audience portrait data.
+
+    Args:
+        kol_id: XingTu KOL ID
+
+    Returns:
+        KOL audience portrait data
+    """
+    result = await _make_request(BASE_URL_XINGTU, "kol_audience_portrait_v1", params={"kolId": kol_id})
+    return result.get("data", {})
+
+
+async def fetch_kol_fans_portrait(kol_id: str) -> Dict:
+    """
+    Get KOL fans portrait data.
+
+    Args:
+        kol_id: XingTu KOL ID
+
+    Returns:
+        KOL fans portrait data
+    """
+    result = await _make_request(BASE_URL_XINGTU, "kol_fans_portrait_v1", params={"kolId": kol_id})
+    return result.get("data", {})
+
+
+async def fetch_kol_service_price(kol_id: str, platform_channel: str = "_1") -> Dict:
+    """
+    Get KOL service pricing information.
+
+    Args:
+        kol_id: XingTu KOL ID
+        platform_channel: Platform channel (_1: Douyin Video, _10: Douyin Live)
+
+    Returns:
+        KOL service pricing information
+    """
+    params = {
+        "kolId": kol_id,
+        "platformChannel": platform_channel
+    }
+
+    result = await _make_request(BASE_URL_XINGTU, "kol_service_price_v1", params=params)
+    return result.get("data", {})
+
+
+async def fetch_kol_data_overview(kol_id: str, type_: str = "_1", range_: str = "_2", flow_type: int = 1) -> Dict:
+    """
+    Get KOL data overview.
+
+    Args:
+        kol_id: XingTu KOL ID
+        type_: Type (_1: Personal video, _2: XingTu video)
+        range_: Range (_2: Last 30 days, _3: Last 90 days)
+        flow_type: Flow type (1: Default)
+
+    Returns:
+        KOL data overview
+    """
+    params = {
+        "kolId": kol_id,
+        "_type": type_,
+        "_range": range_,
+        "flowType": flow_type
+    }
+
+    result = await _make_request(BASE_URL_XINGTU, "kol_data_overview_v1", params=params)
+    return result.get("data", {})
+
+
+async def search_kol(keyword: str, platform_source: str = "_1", page: int = 1) -> List[Dict]:
+    """
+    Search for KOLs by keyword.
+
+    Args:
+        keyword: Search keyword
+        platform_source: Platform source (_1: Douyin, _2: Toutiao, _3: Xigua)
+        page: Page number (starting from 1)
+
+    Returns:
+        List of KOLs
+    """
+    params = {
+        "keyword": keyword,
+        "platformSource": platform_source,
+        "page": page
+    }
+
+    result = await _make_request(BASE_URL_XINGTU, "search_kol_v1", params=params)
+    return result.get("data", {}).get("kols", [])
+
+
+async def fetch_kol_conversion_ability(kol_id: str, range_: str = "_1") -> Dict:
+    """
+    Get KOL conversion ability analysis.
+
+    Args:
+        kol_id: XingTu KOL ID
+        range_: Time range (_1: Last 7 days, _2: Last 30 days, _3: Last 90 days)
+
+    Returns:
+        KOL conversion ability analysis
+    """
+    params = {
+        "kolId": kol_id,
+        "_range": range_
+    }
+
+    result = await _make_request(BASE_URL_XINGTU, "kol_conversion_ability_analysis_v1", params=params)
+    return result.get("data", {})
+
+
+async def fetch_kol_video_performance(kol_id: str, only_assign: bool = False) -> Dict:
+    """
+    Get KOL video performance data.
+
+    Args:
+        kol_id: XingTu KOL ID
+        only_assign: Whether to only show assigned works (True) or all works (False)
+
+    Returns:
+        KOL video performance data
+    """
+    params = {
+        "kolId": kol_id,
+        "onlyAssign": str(only_assign).lower()
+    }
+
+    result = await _make_request(BASE_URL_XINGTU, "kol_video_performance_v1", params=params)
+    return result.get("data", {})
+
+
+async def fetch_kol_xingtu_index(kol_id: str) -> Dict:
+    """
+    Get KOL XingTu index data.
+
+    Args:
+        kol_id: XingTu KOL ID
+
+    Returns:
+        KOL XingTu index data
+    """
+    result = await _make_request(BASE_URL_XINGTU, "kol_xingtu_index_v1", params={"kolId": kol_id})
+    return result.get("data", {})
+
+
+async def fetch_kol_convert_video_display(kol_id: str, detail_type: str = "_1", page: int = 1) -> Dict:
+    """
+    Get KOL conversion video display data.
+
+    Args:
+        kol_id: XingTu KOL ID
+        detail_type: Detail type (_1: Video data, _2: Product data)
+        page: Page number
+
+    Returns:
+        KOL conversion video display data
+    """
+    params = {
+        "kolId": kol_id,
+        "detailType": detail_type,
+        "page": page
+    }
+
+    result = await _make_request(BASE_URL_XINGTU, "kol_convert_video_display_v1", params=params)
+    return result.get("data", {})
+
+
+async def fetch_kol_link_struct(kol_id: str) -> Dict:
+    """
+    Get KOL link structure data.
+
+    Args:
+        kol_id: XingTu KOL ID
+
+    Returns:
+        KOL link structure data
+    """
+    result = await _make_request(BASE_URL_XINGTU, "kol_link_struct_v1", params={"kolId": kol_id})
+    return result.get("data", {})
+
+
+async def fetch_kol_touch_distribution(kol_id: str) -> Dict:
+    """
+    Get KOL touch distribution data (user sources).
+
+    Args:
+        kol_id: XingTu KOL ID
+
+    Returns:
+        KOL touch distribution data
+    """
+    result = await _make_request(BASE_URL_XINGTU, "kol_touch_distribution_v1", params={"kolId": kol_id})
+    return result.get("data", {})
+
+
+async def fetch_kol_cp_info(kol_id: str) -> Dict:
+    """
+    Get KOL cost-performance analysis data.
+
+    Args:
+        kol_id: XingTu KOL ID
+
+    Returns:
+        KOL cost-performance analysis data
+    """
+    result = await _make_request(BASE_URL_XINGTU, "kol_cp_info_v1", params={"kolId": kol_id})
+    return result.get("data", {})
+
+
+async def fetch_kol_rec_videos(kol_id: str) -> Dict:
+    """
+    Get KOL recommended videos and content performance.
+
+    Args:
+        kol_id: XingTu KOL ID
+
+    Returns:
+        KOL recommended videos and content performance
+    """
+    result = await _make_request(BASE_URL_XINGTU, "kol_rec_videos_v1", params={"kolId": kol_id})
+    return result.get("data", {})
+
+
+async def fetch_kol_daily_fans(kol_id: str, start_date: str, end_date: str) -> Dict:
+    """
+    Get KOL daily fans trend data.
+
+    Args:
+        kol_id: XingTu KOL ID
+        start_date: Start date (format: YYYY-MM-DD)
+        end_date: End date (format: YYYY-MM-DD)
+
+    Returns:
+        KOL daily fans trend data
+    """
+    params = {
+        "kolId": kol_id,
+        "startDate": start_date,
+        "endDate": end_date
+    }
+
+    result = await _make_request(BASE_URL_XINGTU, "kol_daily_fans_v1", params=params)
+    return result.get("data", {})
+
+
+async def fetch_author_hot_comment_tokens(kol_id: str) -> Dict:
+    """
+    Get author hot comment tokens analysis.
+
+    Args:
+        kol_id: XingTu KOL ID
+
+    Returns:
+        Author hot comment tokens analysis
+    """
+    result = await _make_request(BASE_URL_XINGTU, "author_hot_comment_tokens_v1", params={"kolId": kol_id})
+    return result.get("data", {})
+
+
+async def fetch_author_content_hot_comment_keywords(kol_id: str) -> Dict:
+    """
+    Get author content hot comment keywords analysis.
+
+    Args:
+        kol_id: XingTu KOL ID
+
+    Returns:
+        Author content hot comment keywords analysis
+    """
+    result = await _make_request(BASE_URL_XINGTU, "author_content_hot_comment_keywords_v1",
+                                 params={"kolId": kol_id})
+    return result.get("data", {})
 
 
 async def save_to_json(data: Any, filename: str) -> None:
