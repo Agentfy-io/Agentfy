@@ -137,7 +137,7 @@
           "description": "Cleans and filters raw Twitter (X) data based on user intent by selecting only relevant fields.",
           "parameters": [
             {
-              "name": "tweet_data",
+              "name": "x_data",
               "type": "List[Dict]",
               "description": "Raw tweet data as a list of dictionaries, typically retrieved from X/Twitter crawlers.",
               "required": true
@@ -156,7 +156,7 @@
             }
           ],
           "returns": {
-            "type": "List[Any]",
+            "type": "Any",
             "description": "Cleaned tweet data containing only the field or fields relevant to the user's request."
           }
         }
