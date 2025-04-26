@@ -68,6 +68,10 @@ class ChatGPTAPIError(ReasoningException):
     """Raised when ChatGPT API call fails."""
     pass
 
+class ClaudeAPIError(ReasoningException):
+    """Raised when Claude API call fails."""
+    pass
+
 # Action Module Exceptions
 class ActionException(SocialMediaAgentException):
     """Base exception for action module."""
