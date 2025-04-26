@@ -42,15 +42,16 @@ def setup_logger(name, level=None):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-    # Create a console handler and set UTF-8 encoding
+    # Create a console handler
     console_handler = logging.StreamHandler(sys.stdout)
-    # Handle Chinese characters in Windows console
+
+    # Handle encoding safely
     try:
-        # Python 3.7+
-        console_handler.stream.reconfigure(encoding='utf-8')
-    except AttributeError:
-        # For older versions, set environment variable instead
-        os.environ["PYTHONIOENCODING"] = "utf-8"
+        if hasattr(console_handler.stream, "reconfigure"):
+            console_handler.stream.reconfigure(encoding="utf-8")  # Python 3.7+
+    except Exception as e:
+        # Fallback: do nothing, or log this to file if needed
+        pass
 
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
