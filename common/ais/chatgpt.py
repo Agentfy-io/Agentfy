@@ -275,7 +275,7 @@ class ChatGPT:
             return result
         except OpenAIError as e:
             # Log and wrap OpenAI specific errors
-            logger.error_with_data(
+            logger.error(
                 f"OpenAI API error: {str(e)}",
                 {"model": model, "temperature": temperature, "max_tokens": max_tokens}
             )
