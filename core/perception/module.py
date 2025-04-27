@@ -92,7 +92,7 @@ class PerceptionModule:
         response = json.loads(response['response']["choices"][0]["message"]["content"].strip())
         return response
 
-    async def validate_input(self, input_data: Union[Dict[str, Any], UserInput]) -> ValidationResult:
+    async def validate_input(self, input_data: Union[Dict[str, Any], UserInput]) -> Tuple[ValidationResult, Dict[str, Any]]:
         """
         Validate and sanitize user input.
 
@@ -159,7 +159,7 @@ class PerceptionModule:
 
             # If there are errors, return validation result with errors
             if errors:
-                return ValidationResult(is_valid=False, errors=errors)
+                return ValidationResult(is_valid=False, errors=errors), cost
 
             # Sanitize input
             sanitized_input = self.input_sanitizer.sanitize_input(input_data)
@@ -175,12 +175,9 @@ class PerceptionModule:
                         "details": new_request['reason'],
                         "message": f"Request clarification failed: {new_request['reason']}"
                     })
-                    return ValidationResult(is_valid=False, errors=errors)
+                    return ValidationResult(is_valid=False, errors=errors), cost
 
-            return ValidationResult(
-                is_valid=True,
-                sanitized_input=sanitized_input
-            )
+            return ValidationResult(is_valid=True,sanitized_input=sanitized_input), cost
 
         except ValidationError as e:
             logger.error(
@@ -202,7 +199,7 @@ class PerceptionModule:
                 {"details": str(e)}
             )
 
-    async def get_gpt_response(self, result: Any, user_input_text: str, output_format: str = "json") -> str:
+    async def get_gpt_response(self, result: Any, user_input_text: str) -> tuple[Any, Any]:
         """
         Generate the opening response for the user using GPT.
 
@@ -245,18 +242,13 @@ class PerceptionModule:
         response = await self.chatgpt.chat(system_prompt, user_prompt)
         return response['response']["choices"][0]["message"]["content"].strip()
 
-    async def format_output(self, result: Any, user_input_text: str, output_format: str = "json") -> FormattedOutput:
+    async def format_output(self, result: Any, user_input_text: str,) -> Tuple[FormattedOutput, Dict]:
         """
         Format the output for presentation to the user.
-
-        This method handles different output formats:
-        - JSON: Converts data to a markdown table with an opening message
-        - Text: Generates a conversational response
 
         Args:
             result (Any): The result data to format
             user_input_text (str): The original user input text
-            output_format (str): The desired output format ("json" or "text")
 
         Returns:
             FormattedOutput: The formatted output containing:
@@ -267,24 +259,17 @@ class PerceptionModule:
         Raises:
             OutputFormattingError: If formatting fails or format is not supported
         """
-        logger.info("Formatting output", {"format": output_format})
+        logger.info("Formatting output")
         try:
-            if output_format == "json":
-                opener = await self.get_gpt_response(result, user_input_text, output_format)
-                try:
-                    df = pd.json_normalize(result)
-                    table = df.to_markdown(index=False)
-                    content = f"{opener}\n\n{table}"
-                except Exception as e:
-                    logger.error("Error formatting JSON to Markdown", {"error": str(e)})
-                    raise OutputFormattingError("Failed to format JSON data to Markdown", {"details": str(e)})
-            elif output_format == "text":
-                content = await self.get_gpt_response(result, user_input_text, output_format)
-            else:
-                raise OutputFormattingError(f"Unsupported output format: {output_format}")
+            opener, cost = await self.get_gpt_response(result, user_input_text)
+            content = opener
 
-            return FormattedOutput(type="data", content=content, format="json")
+            if not isinstance(result, PRIMITIVES):
+                table = result.value.to_markdown(index=False)
+                content = f"{opener}\n\n{table}"
+
+            return FormattedOutput(type="data", content=content, format="json"), cost
 
         except Exception as e:
-            logger.error("Output formatting error", {"error": str(e), "format": output_format})
-            raise OutputFormattingError(f"Failed to format output as {output_format}", {"details": str(e)})
+            logger.error("Output formatting error", {"error": str(e)})
+            raise OutputFormattingError(f"Failed to format output", {"details": str(e)})

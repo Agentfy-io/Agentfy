@@ -68,7 +68,6 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
                 with open(file_path, "wb") as f:
                     f.write(file.getbuffer())
 
-                # Add to files list (adjust according to your UserInput's file format)
                 files.append({
                     "path": file_path,
                     "name": file.name,
@@ -107,6 +106,11 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
                 user_input_text, agents_registry, chat_history
             )
 
+            # Update reasoning cost
+            st.session_state.last_response_costs["input_cost"] += reasoning_cost.get('input_cost')
+            st.session_state.last_response_costs["output_cost"] += reasoning_cost.get("output_cost")
+            st.session_state.last_response_costs["total_cost"] += reasoning_cost.get("total_cost")
+
         # Execute the workflow with progress indicator
         async for update in action_module.execute_workflow(workflow_definition, param_result):
             status = update.status
@@ -116,7 +120,19 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
                 status_placeholder.empty()
                 final_result = update.output.output
             else:
-                output = await perception_module.format_output(update.errors, user_input_text, "text")
+                output, output_cost = await perception_module.format_output(update.errors, user_input_text)
+
+                logger.info("output at workflow cost: %s", output_cost)
+
+                # Update output cost
+                st.session_state.last_response_costs["input_cost"] += output_cost.get('input_cost')
+                st.session_state.last_response_costs["output_cost"] += output_cost.get("output_cost")
+                st.session_state.last_response_costs["total_cost"] += output_cost.get("total_cost")
+
+                st.session_state.total_costs["input_cost"] += st.session_state.last_response_costs['input_cost']
+                st.session_state.total_costs["output_cost"] += st.session_state.last_response_costs["output_cost"]
+                st.session_state.total_costs["total_cost"] += st.session_state.last_response_costs["total_cost"]
+
                 await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
                 return output.content
 
@@ -129,10 +145,19 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
         if type(final_result) == dict or type(final_result) == list:
             output_format = "json"
         else:
-            output_format = "text"
 
         # On success, return the result
-        output = await perception_module.format_output(final_result, user_input_text, output_format)
+        output, output_cost = await perception_module.format_output(final_result, user_input_text)
+
+        # Update output cost
+        st.session_state.last_response_costs["input_cost"] += output_cost.get('input_cost')
+        st.session_state.last_response_costs["output_cost"] += output_cost.get("output_cost")
+        st.session_state.last_response_costs["total_cost"] += output_cost.get("total_cost")
+
+        st.session_state.total_costs["input_cost"] += st.session_state.last_response_costs['input_cost']
+        st.session_state.total_costs["output_cost"] += st.session_state.last_response_costs["output_cost"]
+        st.session_state.total_costs["total_cost"] += st.session_state.last_response_costs["total_cost"]
+
         await memory_module.add_chat_message(user_id, "AGENT", "USER", output.content)
 
         logger.info(f"Workflow executed successfully!")
@@ -141,8 +166,25 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
     except Exception as e:
         logger.exception("Error in process_user_input")
         error_message = f"Internal error occurred: {str(e)}"
-        output = await perception_module.format_output(error_message, user_input_text,"text")
+
+        # Initialize modules with API keys if not already done
+        if 'perception_module' not in locals():
+
+        output, output_cost = await perception_module.format_output(error_message, user_input_text)
+        logger.info("output cost: %s", output_cost)
+
+        st.session_state.last_response_costs["input_cost"] += output_cost['input_cost']
+        st.session_state.last_response_costs["output_cost"] += output_cost['output_cost']
+        st.session_state.last_response_costs["total_cost"] += output_cost['total_cost']
+
+        st.session_state.total_costs["input_cost"] += st.session_state.last_response_costs['input_cost']
+        st.session_state.total_costs["output_cost"] += st.session_state.last_response_costs["output_cost"]
+        st.session_state.total_costs["total_cost"] += st.session_state.last_response_costs["total_cost"]
+
         if "user_id" in st.session_state:
+            # Initialize memory module if not already done
+            if 'memory_module' not in locals():
+                memory_module = MemoryModule()
             await memory_module.add_chat_message(st.session_state.user_id, "SYSTEM", "USER", output.content)
         return output.content
 
