@@ -31,12 +31,10 @@ class ActionModule:
     with proper parameter handling and step-to-step data flow.
     """
 
-    def __init__(self):
+    def __init__(self, api_keys: Optional[Dict[str, str]] = None):
         """Initialize the action module."""
         self.active_workflows = {}
-
-        # load agen_registry json from agents.agent_registry route
-        # self.agent_registry = self.load_agent_registry()
+        self.tikhub_api_key = api_keys.get("tikhub") if api_keys else None
 
     # Load agent registry
     async def get_agent_registry(self):
@@ -126,7 +124,7 @@ class ActionModule:
             for step_index, step in enumerate(workflow.steps):
                 step_id = step.step_id
                 step_start_time = datetime.utcnow()
-                logger.info(f"➡️ Executing step **{step_index + 1} / {len(workflow.steps)}**: `{step.function_id}`...")
+                logger.info(f" Executing step **{step_index + 1} / {len(workflow.steps)}**: `{step.function_id}`...")
 
                 yield ExecutionResult(
                     workflow_id=workflow_id,
@@ -192,7 +190,7 @@ class ActionModule:
                     # Create error
                     error = ExecutionError(
                         error_code="STEP_EXECUTION_ERROR",
-                        message=f"Error executing step {step_id}: {str(e)}",
+                        message=f"Error executing {step_id}: {str(e)}",
                         step_id=step_id,
                         timestamp=datetime.utcnow(),
                         recoverable=False,
@@ -279,6 +277,9 @@ class ActionModule:
         if not params:  # No parameters defined for this step
             return {}
 
+        has_match = False
+        result = {}
+
         # if step_index == 0, check if all required parameters are provided
         if step_index == 0:
             for name, info in params.items():
@@ -290,13 +291,11 @@ class ActionModule:
             return result
 
         # if step_index > 0, check if previous step output can be found in params
-        has_match = False
-        result = {}
 
         for name, info in params.items():
             param_type = info.get("type")
             prev_output = context.get("previous_step_output")
-            # logger.info(f"Preparing parameter: {name} with type: {param_type}, value: {info['value']}, previous output type: {type(prev_output)}")
+            # logger.info(f"Preparing parameter [{name}] with type [{param_type}], value: {info['value']}")
 
             if param_type and param_type == str(type(prev_output)):
                 has_match = True
@@ -325,6 +324,7 @@ class ActionModule:
         Args:
             step: The step to execute
             parameters: Parameters for the step
+            tikhub_api_key: TikHub API key for authentication
 
         Returns:
             Any: Step execution result
@@ -335,8 +335,6 @@ class ActionModule:
         try:
             agent_id = step.agent_id
             function_id = step.function_id
-
-            logger.info(f"Executing function: {agent_id}.{function_id}")
 
             # Find and load the agent module
             try:
@@ -362,9 +360,6 @@ class ActionModule:
                     result = await function(**args)
                 else:
                     result = function(**args)
-
-                logger.info(f"Function {function_id} executed successfully")
-
                 return result
 
             except ImportError as e:
