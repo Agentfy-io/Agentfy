@@ -6,7 +6,7 @@
 """
 import json
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 import uuid
 from datetime import datetime
 
@@ -27,18 +27,17 @@ class ReasoningModule:
     and determine the appropriate workflow of sub-agents.
     """
 
-    def __init__(self):
+    def __init__(self, api_keys: Optional[Dict[str, str]] = None):
         """Initialize the reasoning module with configuration."""
         self.config = settings
-        self.chatgpt = ChatGPT()
-
+        self.chatgpt = ChatGPT(openai_api_key=api_keys['openai'])
 
 
     async def analyze_request_and_build_workflow(self,
                                                  user_request: str,
                                                  agent_registry: Dict[str, Any],
                                                  chat_history: List[ChatMessage] = None,
-                                                 existing_workflow: Dict[str, Any] = None) -> Tuple[WorkflowDefinition, ParameterValidationResult]:
+                                                 existing_workflow: Dict[str, Any] = None) -> Tuple[WorkflowDefinition, ParameterValidationResult, Dict[str, Any]]:
         """
         Analyze user request and build workflow using ChatGPT.
         Handles both new requests and parameter updates for existing workflows.
@@ -67,13 +66,15 @@ class ReasoningModule:
                     agent_registry
                 )
             else:
-                logger.info("🤖🔍Analyzing new user request....")
+                logger.info("Analyzing new user request....")
                 # This is a new request
                 workflow_data = await self._create_new_workflow(
                     user_request,
                     agent_registry,
                     chat_history
                 )
+
+            cost = workflow_data.get('cost', {})
 
             # Convert to proper model objects
             workflow = self._convert_to_workflow_definition(workflow_data)
@@ -87,7 +88,7 @@ class ReasoningModule:
                 parameter_conflicts=parameter_conflicts
             )
 
-            return workflow, parameter_validation_result
+            return workflow, parameter_validation_result, cost
 
         except Exception as e:
             logger.error(f"Error analyzing request: {str(e)}")
@@ -113,15 +114,17 @@ class ReasoningModule:
         user_message = self._create_user_message(user_request, chat_history)
 
         # Call ChatGPT API
-        workflow = await self.chatgpt.chat(system_message, user_message)
+        result = await self.chatgpt.chat(system_message, user_message)
 
         logger.info("Successfully generated new workflow from ChatGPT")
 
         # extract workflow data
-        workflow = workflow['response']["choices"][0]["message"]["content"].strip()
+        workflow = result['response']["choices"][0]["message"]["content"].strip()
         workflow = re.sub(r"^```(?:json)?\s*", "", workflow)
         workflow = re.sub(r"\s*```$", "", workflow)
         workflow = json.loads(workflow)
+        workflow['cost'] = result['cost']
+
         return workflow
 
     async def _update_workflow_parameters(self,
@@ -144,20 +147,24 @@ class ReasoningModule:
         user_message = self._create_parameter_update_user_message(user_input, existing_workflow)
 
         # Call ChatGPT API
-        updated_workflow = await self.chatgpt.chat(system_message, user_message)
+        result = await self.chatgpt.chat(system_message, user_message)
 
         logger.info("Successfully updated workflow parameters")
 
         # extract workflow data
-        updated_workflow = updated_workflow['response']["choices"][0]["message"]["content"]
+        updated_workflow = result['response']["choices"][0]["message"]["content"]
+        updated_workflow = re.sub(r"^```(?:json)?\s*", "", updated_workflow)
+        updated_workflow = re.sub(r"\s*```$", "", updated_workflow)
         updated_workflow = json.loads(updated_workflow)
+        updated_workflow['cost'] = result['cost']
+
         return updated_workflow
 
     def _create_system_message(self, agent_registry: Dict[str, Any]) -> str:
         """Create the system message with agent registry for ChatGPT."""
         return f"""You are an AI assistant that analyzes user requests and creates workflows using available agents.
 
-        You have access to the following agents and their functions:
+        You ONLY have access to the following agents and their functions:
         {json.dumps(agent_registry, indent=2)}
 
         Your task is to:
@@ -172,7 +179,7 @@ class ReasoningModule:
         7. Identify any missing parameters needed only for the first step of the workflow.
         8. If there are any parameter conflicts (in the first step only), include them in the `parameter_conflicts` array.\
         9. If there's cleaning step, edit the value of next_step to describe the essential input parameter(s) of the next step, including name and type.
-        10. if the clean step is the last step, set the next_step to None.
+        10. If the clean step is the LAST STEP, set the next_step to None.
 
 
         Return ONLY a JSON object with the following structure:

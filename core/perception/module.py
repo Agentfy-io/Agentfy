@@ -32,15 +32,6 @@ PRIMITIVES = (str, bool, int, float)
 
 
 class PerceptionModule:
-    """
-    Perception Module for handling input validation, security checks, and output formatting.
-    
-    This module serves as the first point of contact for user input, ensuring that:
-    1. Input is valid and properly formatted
-    2. Security checks are performed
-    3. Ambiguous requests are clarified
-    4. Output is formatted appropriately for presentation
-    """
 
     def __init__(self, api_keys: Optional[Dict[str, str]] = None):
         """
@@ -77,7 +68,6 @@ class PerceptionModule:
                 "reason": None
             }
         """
-        logger.info("Clarifying user request....")
         system_prompt = (
             "You are an intelligent assistant that rephrases ambiguous user instructions into clear, goal-oriented tasks for social media agents. "
             "Your responsibilities include:\n"
@@ -131,76 +121,58 @@ class PerceptionModule:
             if isinstance(input_data, dict):
                 input_data = UserInput(**input_data)
 
-            logger.info(
-                "Validating user input",
-                {"user_id": input_data.metadata.user_id}
-            )
+            logger.info("Validating user input", {"user_id": input_data.metadata.user_id})
+            errors, cost = [], {}
 
-            errors = []
-            cost = {}
-
-            # Check for security issues if text is present
+            # Security check
             if input_data.text:
-                security_check = self.security_validator.check_for_injection(input_data.text)
-                if not security_check.is_safe:
-                    logger.warning(
-                        "Security check failed",
-                        {
-                            "user_id": input_data.metadata.user_id,
-                            "issues": [issue.dict() for issue in security_check.detected_issues]
-                        }
-                    )
-                    errors.append({
-                        "type": "security",
-                        "details": [issue.dict() for issue in security_check.detected_issues],
-                        "message": "Your request contains potentially harmful content that cannot be processed."
-                    })
+                sec_check = self.security_validator.check_for_injection(input_data.text)
+                if not sec_check.is_safe:
+                    issues = [issue.dict() for issue in sec_check.detected_issues]
+                    logger.warning("Security check failed", {"user_id": input_data.metadata.user_id, "issues": issues})
+                    return ValidationResult(
+                        is_valid=False,
+                        errors=[{
+                            "type": "security",
+                            "details": issues,
+                            "message": "Request contains potentially harmful content."
+                        }]
+                    ), cost
 
-            # Validate files if present
+            # File validation
             if input_data.files:
                 for file_info in input_data.files:
-                    file_validation = self.file_validator.validate_file(
-                        file_info.filename, file_info.size
-                    )
-                    if not file_validation["is_allowed"]:
-                        errors.append({
-                            "type": "file",
-                            "details": file_validation["reason"],
-                            "message": f"File '{file_info.filename}' is not allowed. {file_validation['reason']}"
-                        })
+                    validation = self.file_validator.validate_file(file_info.filename, file_info.size)
+                    if not validation["is_allowed"]:
+                        return ValidationResult(
+                            is_valid=False,
+                            errors=[{
+                                "type": "file",
+                                "details": validation["reason"],
+                                "message": f"File '{file_info.filename}' not allowed. {validation['reason']}"
+                            }]
+                        ), cost
 
-            # If there are errors, return validation result with errors
-            if errors:
-                return ValidationResult(is_valid=False, errors=errors), cost
-
-            # Sanitize input
+            # Input sanitization
             sanitized_input = self.input_sanitizer.sanitize_input(input_data)
 
-            # refine user text input
-            if sanitized_input['text']:
-                new_request = await self.clarify_user_request(sanitized_input['text'])
-                cost = new_request.get("cost", {})
-                if new_request.get("is_valid"):
-                    sanitized_input['text'] = new_request.get("rephrased_request")
+            # Clarify ambiguous text input
+            if sanitized_input.get('text'):
+                clarification = await self.clarify_user_request(sanitized_input['text'])
+                cost = clarification.get("cost", {})
+                if clarification.get("is_valid"):
+                    sanitized_input['text'] = clarification['rephrased_request']
                 else:
-                    errors.append({
-                        "type": "clarification",
-                        "details": new_request['reason'],
-                        "message": f"Request clarification failed: {new_request['reason']}"
-                    })
-                    return ValidationResult(is_valid=False, errors=errors), cost
+                    return ValidationResult(
+                        is_valid=False,
+                        errors=[{
+                            "type": "clarification",
+                            "details": clarification['reason'],
+                            "message": f"Request clarification failed: {clarification['reason']}"
+                        }]
+                    ), cost
 
-            return ValidationResult(is_valid=True,sanitized_input=sanitized_input), cost
-
-        except ValidationError as e:
-            logger.error(
-                "Input validation error",
-                {"error": str(e)}
-            )
-            raise InputValidationError(
-                "Invalid input format",
-                {"details": e.errors()}
-            )
+            return ValidationResult(is_valid=True, sanitized_input=sanitized_input), cost
 
         except Exception as e:
             logger.error(
@@ -226,7 +198,6 @@ class PerceptionModule:
         Raises:
             OutputFormattingError: If the output format is not supported
         """
-        logger.info("Generating GPT response", {"format": output_format})
         system_prompt = (
             "You are a helpful social media assistant and output formatter. Based on the user query and the provided result data, "
             "generate a brief, friendly response in a conversational tone using Markdown formatting. \n\n"

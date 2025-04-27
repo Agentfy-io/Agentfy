@@ -6,13 +6,10 @@
 """
 import importlib
 import inspect
-import asyncio
 import json
 import os
 from typing import Any, Dict, List, Optional, Union, Tuple, AsyncGenerator
 from datetime import datetime
-
-from pyasn1.type.univ import Boolean
 
 from common.exceptions.exceptions import WorkflowExecutionError, StepExecutionError
 from common.models.workflows import (
@@ -26,28 +23,26 @@ logger = setup_logger(__name__)
 
 
 class ActionModule:
-    """
-    Simplified Action Module that executes workflows by finding and calling agent functions,
-    with proper parameter handling and step-to-step data flow.
-    """
 
     def __init__(self, api_keys: Optional[Dict[str, str]] = None):
         """Initialize the action module."""
         self.active_workflows = {}
         self.tikhub_api_key = api_keys.get("tikhub") if api_keys else None
 
-    # Load agent registry
-    async def get_agent_registry(self):
+
+    @staticmethod
+    async def get_agent_registry():
         registry_path = os.getenv("AGENT_REGISTRY_PATH", "agents_registry.json")
         try:
             with open(registry_path, "r") as f:
                 return json.load(f)
         except FileNotFoundError:
-            print(f"Registry file not found at {registry_path}")
+            logger.error(f"Registry file not found at {registry_path}")
             return {}
         except json.JSONDecodeError:
-            print(f"Invalid JSON in registry file at {registry_path}")
+            logger.error(f"Invalid JSON in registry file at {registry_path}")
             return {}
+
 
     async def execute_workflow(self, workflow: WorkflowDefinition,
                                param_validation: ParameterValidationResult) ->  AsyncGenerator[ExecutionResult, None]:
@@ -336,7 +331,6 @@ class ActionModule:
             agent_id = step.agent_id
             function_id = step.function_id
 
-            # Find and load the agent module
             try:
                 # Dynamic import based on agent ID
                 # Format: platform_category (e.g., tiktok_crawler, twitter_analysis)
