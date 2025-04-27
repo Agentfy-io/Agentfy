@@ -1,6 +1,6 @@
 import json
 import pandas as pd
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from common.ais.chatgpt import ChatGPT
 from common.utils.logging import setup_logger
@@ -13,7 +13,7 @@ logger = setup_logger(__name__)
 
 pai.api_key.set(settings.pandas_api_key)
 
-async def clean_raw_data(user_request: str, youtube_data: List[Dict], next_step: str = None) -> Any:
+async def clean_raw_data(user_request: str, youtube_data: List[Dict], next_step: Optional[str] = None) -> Any:
     """
     Clean raw x data dynamically based on user's request.
     Step 1: Use ChatGPT to generate a PandasAI prompt.
@@ -30,7 +30,7 @@ async def clean_raw_data(user_request: str, youtube_data: List[Dict], next_step:
     # Convert raw data to pandas DataFrame
     try:
         df_raw = pd.json_normalize(youtube_data)
-        df_raw.columns = df_raw.columns.str.replace(r'\W+', '_', regex=True)  # <=== ✨ 加这一行
+        df_raw.columns = df_raw.columns.str.replace(r'\W+', '_', regex=True)
     except Exception as e:
         logger.error(f"Failed to create DataFrame: {e}")
         return None

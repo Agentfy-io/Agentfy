@@ -9,14 +9,14 @@ from common.utils.logging import setup_logger
 logger = setup_logger(__name__)
 
 # Constants
-API_KEY = settings.tikhub_api_key
+TIKHUB_API_KEY = ""
 BASE_URL_APP = "https://api.tikhub.io/api/v1/douyin/app/v3"
 BASE_URL_WEB = "https://api.tikhub.io/api/v1/douyin/web"
 BASE_URL_BILLBOARD = "https://api.tikhub.io/api/v1/douyin/billboard"
 BASE_URL_XINGTU = "https://api.tikhub.io/api/v1/douyin/xingtu"
 HEADERS = {
     "accept": "application/json",
-    "Authorization": f"Bearer {API_KEY}"
+    "Authorization": f"Bearer {TIKHUB_API_KEY}"
 }
 RATE_LIMIT_DELAY = 1
 

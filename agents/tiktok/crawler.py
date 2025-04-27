@@ -7,12 +7,12 @@ from urllib.parse import quote
 from config import settings
 
 # Constants
-API_KEY = settings.tikhub_api_key
+TIKHUB_API_KEY = ""
 APP_BASE_URL = "https://api.tikhub.io/api/v1/tiktok/app/v3"
 WEB_BASE_URL = "https://api.tikhub.io/api/v1/tiktok/web"
 HEADERS = {
     "accept": "application/json",
-    "Authorization": f"Bearer {API_KEY}"
+    "Authorization": f"Bearer {TIKHUB_API_KEY}"
 }
 RATE_LIMIT_DELAY = 1  # Seconds between requests to avoid rate limiting
 
