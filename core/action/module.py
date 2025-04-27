@@ -346,6 +346,10 @@ class ActionModule:
                 module_path = f"agents.{platform}.{category}"
                 agent_module = importlib.import_module(module_path, package=__name__)
 
+                if category == 'crawler':
+                    # For crawler agents, use the TikHub API key
+                    setattr(agent_module, "TIKHUB_API_KEY", self.tikhub_api_key)
+
                 # Find the function
                 if not hasattr(agent_module, function_id):
                     raise StepExecutionError(f"Function {function_id} not found in {module_path}")

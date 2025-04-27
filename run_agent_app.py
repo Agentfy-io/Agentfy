@@ -53,6 +53,12 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
 
         user_id = st.session_state.user_id
 
+        # Initialize modules with API keys
+        memory_module = MemoryModule()
+        reasoning_module = ReasoningModule(api_keys=st.session_state.api_keys)
+        perception_module = PerceptionModule(api_keys=st.session_state.api_keys)
+        action_module = ActionModule(api_keys=st.session_state.api_keys)
+
         # Generate random 4-digit number for output file
         num = str(random.randint(1000, 9999))
         final_result = None
