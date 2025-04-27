@@ -281,9 +281,13 @@ class ActionModule:
 
         # if step_index == 0, check if all required parameters are provided
         if step_index == 0:
-            if any(not info["value"] and info["is_required"] for info in params.values()):
-                return {}
-            return {name: info["value"] for name, info in params.items()}
+            for name, info in params.items():
+                if info["is_required"] and not info["value"]:
+                    logger.warning(f"Missing required parameter: {info['name']}")
+                    return {}
+                if info["is_required"] and info["value"]:
+                    result[name] = info["value"]
+            return result
 
         # if step_index > 0, check if previous step output can be found in params
         has_match = False
