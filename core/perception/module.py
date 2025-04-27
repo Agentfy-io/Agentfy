@@ -10,7 +10,7 @@
 @auth: Callmeiks
 @date: 2024-04-15
 """
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 import json
 import pandas as pd
 from pydantic import ValidationError
@@ -28,6 +28,7 @@ from common.models.messages import (
 
 # Set up logger
 logger = setup_logger(__name__)
+PRIMITIVES = (str, bool, int, float)
 
 
 class PerceptionModule:
@@ -41,7 +42,7 @@ class PerceptionModule:
     4. Output is formatted appropriately for presentation
     """
 
-    def __init__(self):
+    def __init__(self, api_keys: Optional[Dict[str, str]] = None):
         """
         Initialize the perception module with validators and sanitizers.
         
@@ -54,7 +55,7 @@ class PerceptionModule:
         self.security_validator = SecurityValidator()
         self.input_sanitizer = InputSanitizer()
         self.file_validator = FileValidator()
-        self.chatgpt = ChatGPT()
+        self.chatgpt = ChatGPT(openai_api_key=api_keys['openai'])
 
     async def clarify_user_request(self, user_request: str) -> Dict[str, Any]:
         """
@@ -70,7 +71,6 @@ class PerceptionModule:
                 - reason (str): Explanation if request is invalid
 
         Example:
-            >>> await clarify_user_request("post something about AI")
             {
                 "is_valid": True,
                 "rephrased_request": "Create a social media post about artificial intelligence",
@@ -79,17 +79,25 @@ class PerceptionModule:
         """
         logger.info("Clarifying user request....")
         system_prompt = (
-            "You are an intelligent assistant that helps rephrase ambiguous user instructions into clear, goal-oriented tasks for social media agents "
-            "Determine if the request is relevant, clean typo. Output a JSON with:\n"
-            "- is_valid (bool): if the request is actionable\n"
-            "- rephrased_request (str): only if valid\n"
-            "- reason (str): why it's invalid, if applicable"
+            "You are an intelligent assistant that rephrases ambiguous user instructions into clear, goal-oriented tasks for social media agents. "
+            "If the instructions contain inappropriate phrases or highly irrelevant content, mark the request as invalid. "
+            "If the user input is Non-English, translate it to English. "
+            "Determine if the request is relevant, clean up typos, and ensure clarity. "
+            "Also check if the user clearly stated which platform (e.g., TikTok, Twitter, Instagram) they want to interact with. "
+            "If no platform is mentioned, consider the request incomplete and ask the user to clarify.\n\n"
+            "Output a JSON with:\n"
+            "- is_valid (bool): Whether the request is actionable and clear\n"
+            "- rephrased_request (str): A clean, rephrased version of the request (only if valid)\n"
+            "- reason (str): Why it's invalid or incomplete, if applicable"
         )
 
         user_prompt = f"Original request: {user_request}\n\nRespond with JSON:"
 
-        response = await self.chatgpt.chat(system_prompt, user_prompt)
-        response = json.loads(response['response']["choices"][0]["message"]["content"].strip())
+        result = await self.chatgpt.chat(system_prompt, user_prompt)
+        response = json.loads(result['response']["choices"][0]["message"]["content"].strip())
+        logger.info(f"Clarified request: {response}")
+        response['cost'] = result['cost']
+
         return response
 
     async def validate_input(self, input_data: Union[Dict[str, Any], UserInput]) -> Tuple[ValidationResult, Dict[str, Any]]:
@@ -126,6 +134,7 @@ class PerceptionModule:
             )
 
             errors = []
+            cost = {}
 
             # Check for security issues if text is present
             if input_data.text:
@@ -167,6 +176,7 @@ class PerceptionModule:
             # refine user text input
             if sanitized_input['text']:
                 new_request = await self.clarify_user_request(sanitized_input['text'])
+                cost = new_request.get("cost", {})
                 if new_request.get("is_valid"):
                     sanitized_input['text'] = new_request.get("rephrased_request")
                 else:
@@ -206,7 +216,6 @@ class PerceptionModule:
         Args:
             result (Any): The result data to include in the response
             user_input_text (str): The original user input text
-            output_format (str): The desired output format ("json" or "text")
 
         Returns:
             str: The generated response text
@@ -238,9 +247,11 @@ class PerceptionModule:
             )
         else:
             raise OutputFormattingError(f"Unsupported output format: {output_format}")
+        result = await self.chatgpt.chat(system_prompt, user_prompt)
+        response = result['response']["choices"][0]["message"]["content"].strip()
+        cost = result["cost"]
 
-        response = await self.chatgpt.chat(system_prompt, user_prompt)
-        return response['response']["choices"][0]["message"]["content"].strip()
+        return response, cost
 
     async def format_output(self, result: Any, user_input_text: str,) -> Tuple[FormattedOutput, Dict]:
         """
