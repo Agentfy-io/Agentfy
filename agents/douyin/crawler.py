@@ -1539,8 +1539,7 @@ async def get_xingtu_kolid(uid: Optional[str] = None, sec_user_id: Optional[str]
     return result.get("data", {}).get("core_user_id", "")
 
 
-async def fetch_kol_base_info(kol_id: str, platform_channel: str = "_1") -> Dict:
-    #TODO : this endpoint needs to be fixed or updated
+async def fetch_kol_base_info(kol_id: str, platform_channel: str = "_1") -> List[Dict]:
     """
     Get KOL base information.
 
@@ -1557,11 +1556,10 @@ async def fetch_kol_base_info(kol_id: str, platform_channel: str = "_1") -> Dict
     }
 
     result = await _make_request(BASE_URL_XINGTU, "kol_base_info_v1", params=params)
-    return result.get("data", {})
+    return [result.get("data", {})]
 
 
-async def fetch_kol_audience_portrait(kol_id: str) -> Dict:
-    #TODO : this endpoint needs to be fixed or updated
+async def fetch_kol_audience_portrait(kol_id: str) -> List[Dict]:
     """
     Get KOL audience portrait data.
 
@@ -1572,10 +1570,11 @@ async def fetch_kol_audience_portrait(kol_id: str) -> Dict:
         KOL audience portrait data
     """
     result = await _make_request(BASE_URL_XINGTU, "kol_audience_portrait_v1", params={"kolId": kol_id})
-    return result.get("data", {})
+    return result.get("data", {}).get("distributions", [])
 
 
 async def fetch_kol_fans_portrait(kol_id: str) -> Dict:
+    #TODO : this endpoint needs to be fixed or updated
     """
     Get KOL fans portrait data.
 
@@ -1589,7 +1588,7 @@ async def fetch_kol_fans_portrait(kol_id: str) -> Dict:
     return result.get("data", {})
 
 
-async def fetch_kol_service_price(kol_id: str, platform_channel: str = "_1") -> Dict:
+async def fetch_kol_service_price(kol_id: str, platform_channel: str = "_1") -> List[Dict]:
     """
     Get KOL service pricing information.
 
@@ -1606,10 +1605,14 @@ async def fetch_kol_service_price(kol_id: str, platform_channel: str = "_1") -> 
     }
 
     result = await _make_request(BASE_URL_XINGTU, "kol_service_price_v1", params=params)
-    return result.get("data", {})
+
+    # only keep the industry tags and price_info
+    result = result.get("data", {})
+    clean_result = {"industry_tags": result.get("industry_tags", []), "price_info": result.get("price_info", [])}
+    return [clean_result ]
 
 
-async def fetch_kol_data_overview(kol_id: str, type_: str = "_1", range_: str = "_2", flow_type: int = 1) -> Dict:
+async def fetch_kol_data_overview(kol_id: str, type_: str = "_1", range_: str = "_2", flow_type: int = 1) -> List[Dict]:
     """
     Get KOL data overview.
 
@@ -1630,17 +1633,17 @@ async def fetch_kol_data_overview(kol_id: str, type_: str = "_1", range_: str = 
     }
 
     result = await _make_request(BASE_URL_XINGTU, "kol_data_overview_v1", params=params)
-    return result.get("data", {})
+    return [result.get("data", {})]
 
 
-async def search_kol(keyword: str, platform_source: str = "_1", page: int = 1) -> List[Dict]:
+async def search_kol(keyword: str, platform_source: str = "_1", max_page: int = 1) -> List[Dict]:
     """
     Search for KOLs by keyword.
 
     Args:
         keyword: Search keyword
         platform_source: Platform source (_1: Douyin, _2: Toutiao, _3: Xigua)
-        page: Page number (starting from 1)
+        max_page: Maximum number of pages to fetch
 
     Returns:
         List of KOLs
@@ -1648,14 +1651,47 @@ async def search_kol(keyword: str, platform_source: str = "_1", page: int = 1) -
     params = {
         "keyword": keyword,
         "platformSource": platform_source,
-        "page": page
+        "page": 1
+    }
+    all_kols = []
+
+    for _ in range(max_page):
+        result = await _make_request(BASE_URL_XINGTU, "kol_search_v1", params=params)
+        data = result.get("data", {}).get("authors", [])
+        all_kols.extend(data)
+
+        has_more = result.get("data", {}).get("pagination", {}).get("has_more", False)
+        if not has_more:
+            break
+
+        params["page"] += 1
+        await asyncio.sleep(RATE_LIMIT_DELAY)
+
+    return all_kols
+
+
+async def fetch_kol_count_by_keyword(keyword: str, platform_source: str = "_1") -> int:
+    """
+    Get total KOL count related to a keyword.
+
+    Args:
+        keyword: Search keyword
+        platform_source: Platform source (_1: Douyin, _2: Toutiao, _3: Xigua)
+
+    Returns:
+        KOL count
+    """
+    params = {
+        "keyword": keyword,
+        "platformSource": platform_source
     }
 
-    result = await _make_request(BASE_URL_XINGTU, "search_kol_v1", params=params)
-    return result.get("data", {}).get("kols", [])
+    result = await _make_request(BASE_URL_XINGTU, "kol_search_v1", params=params)
+    return result.get("data", {}).get("pagination", {}).get("total_count", 0)
 
 
-async def fetch_kol_conversion_ability(kol_id: str, range_: str = "_1") -> Dict:
+async def fetch_kol_conversion_ability(kol_id: str, range_: str = "_1") -> List[Dict]:
+    #TODO: code is 200, but data is empty
     """
     Get KOL conversion ability analysis.
 
@@ -1672,10 +1708,11 @@ async def fetch_kol_conversion_ability(kol_id: str, range_: str = "_1") -> Dict:
     }
 
     result = await _make_request(BASE_URL_XINGTU, "kol_conversion_ability_analysis_v1", params=params)
-    return result.get("data", {})
+    return [result.get("data", {})]
 
 
-async def fetch_kol_video_performance(kol_id: str, only_assign: bool = False) -> Dict:
+async def fetch_kol_video_performance(kol_id: str, only_assign: bool = False) -> List[Dict]:
+    # TODO: code is 200, but data is empty
     """
     Get KOL video performance data.
 
@@ -1688,16 +1725,16 @@ async def fetch_kol_video_performance(kol_id: str, only_assign: bool = False) ->
     """
     params = {
         "kolId": kol_id,
-        "onlyAssign": str(only_assign).lower()
+        "onlyAssign": only_assign
     }
 
     result = await _make_request(BASE_URL_XINGTU, "kol_video_performance_v1", params=params)
-    return result.get("data", {})
+    return [result.get("data", {})]
 
 
-async def fetch_kol_xingtu_index(kol_id: str) -> Dict:
+async def fetch_kol_xingtu_index(kol_id: str) -> List[Dict]:
     """
-    Get KOL XingTu index data.
+    This dataset represents key performance metrics for a Key Opinion Leader (KOL) influencer, showing their engagement indices, ranking percentiles, and advertising cost expectations compared to industry averages.
 
     Args:
         kol_id: XingTu KOL ID
@@ -1706,10 +1743,11 @@ async def fetch_kol_xingtu_index(kol_id: str) -> Dict:
         KOL XingTu index data
     """
     result = await _make_request(BASE_URL_XINGTU, "kol_xingtu_index_v1", params={"kolId": kol_id})
-    return result.get("data", {})
+    return [result.get("data", {})]
 
 
 async def fetch_kol_convert_video_display(kol_id: str, detail_type: str = "_1", page: int = 1) -> Dict:
+    #TODO: code is 200, but data is empty
     """
     Get KOL conversion video display data.
 
@@ -1731,9 +1769,10 @@ async def fetch_kol_convert_video_display(kol_id: str, detail_type: str = "_1", 
     return result.get("data", {})
 
 
-async def fetch_kol_link_struct(kol_id: str) -> Dict:
+async def fetch_kol_link_struct(kol_id: str) -> List[Dict]:
     """
-    Get KOL link structure data.
+    Get analysis of a specific KOL influencer specializing in product recommendations,
+    showing their engagement metrics and performance across different content categories compared to industry standards.
 
     Args:
         kol_id: XingTu KOL ID
@@ -1742,10 +1781,10 @@ async def fetch_kol_link_struct(kol_id: str) -> Dict:
         KOL link structure data
     """
     result = await _make_request(BASE_URL_XINGTU, "kol_link_struct_v1", params={"kolId": kol_id})
-    return result.get("data", {})
+    return [result.get("data", {})]
 
 
-async def fetch_kol_touch_distribution(kol_id: str) -> Dict:
+async def fetch_kol_touch_distribution(kol_id: str) -> List[Dict]:
     """
     Get KOL touch distribution data (user sources).
 
@@ -1756,12 +1795,12 @@ async def fetch_kol_touch_distribution(kol_id: str) -> Dict:
         KOL touch distribution data
     """
     result = await _make_request(BASE_URL_XINGTU, "kol_touch_distribution_v1", params={"kolId": kol_id})
-    return result.get("data", {})
+    return [result.get("data", {})]
 
 
-async def fetch_kol_cp_info(kol_id: str) -> Dict:
+async def fetch_kol_cp_info(kol_id: str) -> List[Dict]:
     """
-    Get KOL cost-performance analysis data.
+    Get KOL cost-performance analysis data, including the Price of different length （CPM）, and expect video views.
 
     Args:
         kol_id: XingTu KOL ID
@@ -1770,12 +1809,12 @@ async def fetch_kol_cp_info(kol_id: str) -> Dict:
         KOL cost-performance analysis data
     """
     result = await _make_request(BASE_URL_XINGTU, "kol_cp_info_v1", params={"kolId": kol_id})
-    return result.get("data", {})
+    return [result.get("data", {})]
 
 
-async def fetch_kol_rec_videos(kol_id: str) -> Dict:
+async def fetch_kol_rec_videos(kol_id: str) -> List[Dict]:
     """
-    Get KOL recommended videos and content performance.
+    Get KOL's best performance videos and content performance.
 
     Args:
         kol_id: XingTu KOL ID
@@ -1784,12 +1823,13 @@ async def fetch_kol_rec_videos(kol_id: str) -> Dict:
         KOL recommended videos and content performance
     """
     result = await _make_request(BASE_URL_XINGTU, "kol_rec_videos_v1", params={"kolId": kol_id})
-    return result.get("data", {})
+    return result.get("data", {}).get("masterpiece_videos", [])
 
 
-async def fetch_kol_daily_fans(kol_id: str, start_date: str, end_date: str) -> Dict:
+async def fetch_kol_daily_fans(kol_id: str, start_date: str, end_date: str) -> List[Dict]:
     """
-    Get KOL daily fans trend data.
+    Get Douyin KOL daily fans trend data and KOL's fan growth trajectory,
+    "daily" shows the total fan count on each date, while "delta" shows the changes in fan numbers between consecutive dates
 
     Args:
         kol_id: XingTu KOL ID
@@ -1806,12 +1846,12 @@ async def fetch_kol_daily_fans(kol_id: str, start_date: str, end_date: str) -> D
     }
 
     result = await _make_request(BASE_URL_XINGTU, "kol_daily_fans_v1", params=params)
-    return result.get("data", {})
+    return [result.get("data", {})]
 
 
-async def fetch_author_hot_comment_tokens(kol_id: str) -> Dict:
+async def fetch_author_hot_comment_tokens(kol_id: str) -> List[Dict]:
     """
-    Get author hot comment tokens analysis.
+    Get author hot comment tokens analysis, which shows the most frequently used words in the author's hot comments,
 
     Args:
         kol_id: XingTu KOL ID
@@ -1820,10 +1860,10 @@ async def fetch_author_hot_comment_tokens(kol_id: str) -> Dict:
         Author hot comment tokens analysis
     """
     result = await _make_request(BASE_URL_XINGTU, "author_hot_comment_tokens_v1", params={"kolId": kol_id})
-    return result.get("data", {})
+    return result.get("data", {}).get("hot_comment_tokens", [])
 
 
-async def fetch_author_content_hot_comment_keywords(kol_id: str) -> Dict:
+async def fetch_author_content_hot_comment_keywords(kol_id: str) -> List[Dict]:
     """
     Get author content hot comment keywords analysis.
 
@@ -1835,7 +1875,13 @@ async def fetch_author_content_hot_comment_keywords(kol_id: str) -> Dict:
     """
     result = await _make_request(BASE_URL_XINGTU, "author_content_hot_comment_keywords_v1",
                                  params={"kolId": kol_id})
-    return result.get("data", {})
+    result = result.get("data", {})
+
+    cleaned_result = {
+        "keyword_item_distribution": result.get("keyword_item_distribution", {}),
+        "keyword_map": result.get("keyword_map", {})
+    }
+    return [cleaned_result]
 
 
 async def save_to_json(data: Any, filename: str) -> None:
