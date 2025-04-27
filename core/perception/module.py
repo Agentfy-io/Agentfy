@@ -227,29 +227,21 @@ class PerceptionModule:
             OutputFormattingError: If the output format is not supported
         """
         logger.info("Generating GPT response", {"format": output_format})
+        system_prompt = (
+            "You are a helpful social media assistant and output formatter. Based on the user query and the provided result data, "
+            "generate a brief, friendly response in a conversational tone using Markdown formatting. \n\n"
+            "- If the result is structured data (not a plain string), write an opening paragraph of 2–3 sentences summarizing the key insights or patterns. "
+            "Do **not** include or display the full data in the response. At the end, ask the user if they would like to take an interactive action "
+            "(such as replying to a comment, sending a DM, or engaging with users).\n"
+            "- If the result is a string or bool, or float or int or any single value, treat it as a direct answer from an upstream tool and generate a thoughtful response that weaves together the user query and result.\n\n"
+            "Keep the total response under 150 words. Use emojis where appropriate to enhance friendliness while maintaining professionalism."
+        )
 
-        if output_format == "json":
-            system_prompt = (
-                "You are a helpful social media assistant. Create a brief 2-3 sentence conversational opening "
-                "based on the user query and sample result data. Highlight key insights without over-explaining. "
-                "Add a few emojis to enhance friendliness and professionalism."
-            )
-            user_prompt = (
-                f"User query: {user_input_text}\n\n"
-                f"Sample data: {result[:5]}\n\n"
-            )
-        elif output_format == "text":
-            system_prompt = (
-                "You are a helpful social media assistant. Create a concise, conversational response "
-                "based on the user query and final result. Keep it under 150 words. Return output in Markdown format. "
-                "Feel free to include a few emojis to enhance tone."
-            )
-            user_prompt = (
-                f"User query: {user_input_text}\n\n"
-                f"Result: {result}\n\n"
-            )
-        else:
-            raise OutputFormattingError(f"Unsupported output format: {output_format}")
+        user_prompt = (
+            f"User query: {user_input_text}\n\n"
+            f"Result data: {result}\n\n"
+        )
+
         result = await self.chatgpt.chat(system_prompt, user_prompt)
         response = result['response']["choices"][0]["message"]["content"].strip()
         cost = result["cost"]
