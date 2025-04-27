@@ -459,8 +459,7 @@ class YouTubeInteractive:
             logger.error(f"Unexpected error during playlist addition: {str(e)}")
             return False
 
-    async def create_playlist(self, title: str, description: str = '', privacy_status: str = 'private') -> Optional[
-        str]:
+    async def create_playlist(self, title: str, description: str = '', privacy_status: str = 'private') -> Optional[str]:
         """
         Create a new playlist.
 
@@ -673,10 +672,24 @@ async def main():
             )
 
         # Example:comment reply
-        await client.reply_to_comment(
-            parent_comment_id="COMMENT_ID",
-            comment_text="This is a reply to a comment"
+        # await client.reply_to_comment(
+        #     parent_comment_id="COMMENT_ID",
+        #     comment_text="This is a reply to a comment"
+        # )
+
+        # create a playlist
+        playlist_id = await client.create_playlist(
+            title="Test Playlist",
+            description="This is a test playlist created via the YouTube API",
+            privacy_status="private"
         )
+
+        # set the playList to public
+        if playlist_id:
+            await client.update_video(
+                video_id=video_id,
+                privacy_status="public"
+            )
 
 
 if __name__ == "__main__":
