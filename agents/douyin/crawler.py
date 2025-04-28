@@ -3962,7 +3962,6 @@ async def fetch_hot_total_hot_word_detail_list(keyword: Optional[str] = None, wo
         keyword (Optional[str], optional): Search keyword
         word_id (Optional[str], optional): Content word id
         query_day (Optional[str], optional): Query date, format: YYYYMMDD.
-            如果为None，则使用当前日期。
 
     Returns:
         Dict: Content word details data, possibly empty. The API returns an object instead of a list, and the specific structure depends on the API response.
