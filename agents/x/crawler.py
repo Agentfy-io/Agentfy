@@ -1,4 +1,6 @@
 import asyncio
+import sys
+
 import aiohttp
 import json
 import time
@@ -9,20 +11,23 @@ from common.utils.logging import setup_logger
 logger = setup_logger(__name__)
 
 # Constants
-API_KEY = settings.tikhub_api_key
+TIKHUB_API_KEY = ""
 BASE_URL = "https://api.tikhub.io/api/v1/twitter/web"
-HEADERS = {
-    "accept": "application/json",
-    "Authorization": f"Bearer {API_KEY}"
-}
 RATE_LIMIT_DELAY = 1
+
+def get_headers():
+    module = sys.modules[__name__]
+    return {
+        "accept": "application/json",
+        "Authorization": f"Bearer {getattr(module, 'TIKHUB_API_KEY', '')}"
+    }
 
 
 async def _make_request(endpoint: str, params: Optional[Dict] = None) -> Dict:
     url = f"{BASE_URL}/{endpoint}"
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=HEADERS, params=params) as response:
+            async with session.get(url, headers=get_headers(), params=params) as response:
                 response.raise_for_status()
                 return await response.json()
     except aiohttp.ClientError as e:
@@ -121,7 +126,7 @@ async def fetch_post_comments(tweet_id: str, max_pages: int = 1) -> List[Dict]:
     return all_comments
 
 
-async def fetch_search_posts(keyword: str, search_type: str = "Top", max_pages: int = 1) -> List[Dict]:
+async def fetch_search_posts(keyword: str, search_type: str = "Top", max_pages: int = 5) -> List[Dict]:
     endpoint = "fetch_search_timeline"
     params = {
         "keyword": keyword,
@@ -135,6 +140,7 @@ async def fetch_search_posts(keyword: str, search_type: str = "Top", max_pages: 
             params["cursor"] = cursor
 
         response = await _make_request(endpoint, params)
+        logger.info(f"Currently requesting {keyword} with cursor: {cursor}")
         if "error" in response:
             break
 

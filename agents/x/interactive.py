@@ -231,7 +231,7 @@ async def retweet_tweets(tweet_ids: List[str]) -> bool:
 
 
 async def main():
-    result = await post_tweets(["Hello, X World! 🌍 #XAPIIII"])
+    result = await post_tweets(["Hello, X World! This is a Test! 🌍 #XAPI"])
     if result:
         logger.info("Tweets posted successfully.")
     else:
