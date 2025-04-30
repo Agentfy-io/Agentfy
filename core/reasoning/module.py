@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 
 from common.ais.chatgpt import ChatGPT
-from common.models.messages import ChatMessage
+from common.models.messages import ChatMessage, UserInput
 from config import settings
 from common.exceptions.exceptions import AnalysisError, ChatGPTAPIError
 from common.models.workflows import WorkflowDefinition, MissingParameter,  ParameterConflict, WorkflowStep, Parameter, ParameterValidationResult
@@ -34,7 +34,7 @@ class ReasoningModule:
 
 
     async def analyze_request_and_build_workflow(self,
-                                                 user_request: str,
+                                                 user_input: UserInput,
                                                  agent_registry: Dict[str, Any],
                                                  chat_history: List[ChatMessage] = None,
                                                  existing_workflow: Dict[str, Any] = None) -> Tuple[WorkflowDefinition, ParameterValidationResult, Dict[str, Any]]:
@@ -43,7 +43,7 @@ class ReasoningModule:
         Handles both new requests and parameter updates for existing workflows.
 
         Args:
-            user_request: The user's request text
+            user_input: input that contains both request and file
             agent_registry: Registry of available agents and functions
             chat_history: Optional chat history for context
             existing_workflow: Optional existing workflow to update
@@ -61,7 +61,7 @@ class ReasoningModule:
                 logger.info("🤖🔍Analyzing parameter update for existing workflow...")
                 # This is a parameter update for an existing workflow
                 workflow_data = await self._update_workflow_parameters(
-                    user_request,
+                    user_input,
                     existing_workflow,
                     agent_registry
                 )
@@ -69,7 +69,7 @@ class ReasoningModule:
                 logger.info("Analyzing new user request....")
                 # This is a new request
                 workflow_data = await self._create_new_workflow(
-                    user_request,
+                    user_input,
                     agent_registry,
                     chat_history
                 )
@@ -95,7 +95,7 @@ class ReasoningModule:
             raise AnalysisError(f"Failed to analyze request: {str(e)}")
 
     async def _create_new_workflow(self,
-                                   user_request: str,
+                                   user_input: UserInput,
                                    agent_registry: Dict[str, Any],
                                    chat_history: List[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -110,8 +110,17 @@ class ReasoningModule:
             Dict[str, Any]: New workflow definition
         """
         # Prepare the prompt for ChatGPT
+        user_request = user_input.text
+        user_files = user_input.files
+
+        full_file_content = ""
+        for file in user_files:
+            full_file_content +=file.file_content
+
+        logger.info(f"full_file_content: {full_file_content}")
+
         system_message = self._create_system_message(agent_registry)
-        user_message = self._create_user_message(user_request, chat_history)
+        user_message = self._create_user_message(user_request, full_file_content, chat_history)
 
         # Call ChatGPT API
         result = await self.chatgpt.chat(system_message, user_message)
@@ -128,7 +137,7 @@ class ReasoningModule:
         return workflow
 
     async def _update_workflow_parameters(self,
-                                          user_input: str,
+                                          user_input: UserInput,
                                           existing_workflow: Dict[str, Any],
                                           agent_registry: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -168,19 +177,20 @@ class ReasoningModule:
         {json.dumps(agent_registry, indent=2)}
 
         Your task is to:
-        1. Understand the user's request
-        2. Identify the appropriate agents and functions needed to fulfill the request
-        3. ⚠️ Very Important: If the workflow includes any **crawler functions** (functions under an agent with ID containing "crawler"),
-        you **must** add a **cleaning step** of required platform right after it using an available analysis function (e.g., `clean_data`).
-        The cleaning step should extract the relevant fields needed for the next action.
-        4. Make sure that any function that depends on specific parameters only receives data that has been explicitly prepared in prior steps.
-        5. If the values of the parameters are from the previous steps, please leave them empty.
-        6. Create a workflow with the necessary steps in the correct logical order.
-        7. Identify any missing parameters needed only for the first step of the workflow.
-        8. If there are any parameter conflicts (in the first step only), include them in the `parameter_conflicts` array.\
-        9. If there's cleaning step, edit the value of next_step to describe the essential input parameter(s) of the next step, including name and type.
-        10. If the clean step is the LAST STEP, set the next_step to None.
-
+        1. Understand the user's request and analyze any file input (if present).
+        2. Examine the content of the file input, if provided, and identify relevant information that can be used to generate the workflow.
+        3. If the file contains data, integrate it into the workflow and analyze it using available agents.
+        4. Identify the appropriate agents and functions needed to fulfill the request, considering both the user’s request and the file content.
+        5. ⚠️ Very Important: If the workflow includes any **crawler functions** (functions under an agent with ID containing "crawler"),
+            you **must** add a **cleaning step** of the required platform right after it using an available analysis function (e.g., `clean_data`).
+            The cleaning step should extract the relevant fields needed for the next action.
+        6. Make sure that any function that depends on specific parameters only receives data that has been explicitly prepared in prior steps.
+        7. If the values of the parameters are from the previous steps, please leave them empty.
+        8. Create a workflow with the necessary steps in the correct logical order.
+        9. Identify any missing parameters needed only for the first step of the workflow.
+        10. If there are any parameter conflicts (in the first step only), include them in the `parameter_conflicts` array.
+        11. If there's a cleaning step, edit the value of `next_step` to describe the essential input parameter(s) of the next step, including name and type.
+        12. If the cleaning step is the LAST STEP, set the `next_step` to None.
 
         Return ONLY a JSON object with the following structure:
         {{
@@ -327,9 +337,12 @@ class ReasoningModule:
         If there are any parameter conflicts, include them in the parameter_conflicts array with a reason and resolution suggestion.
         """
 
-    def _create_user_message(self, user_request: str, chat_history: List[Dict[str, Any]] = None) -> str:
+    def _create_user_message(self, user_request: str, file_content:str, chat_history: List[Dict[str, Any]] = None) -> str:
         """Create the user message with request and chat history for ChatGPT."""
         message = f"User Request: {user_request}\n\n"
+
+        if file_content:
+            message += f"File Content: {file_content}\n\n"
 
         if chat_history:
             message += "Chat History:\n"

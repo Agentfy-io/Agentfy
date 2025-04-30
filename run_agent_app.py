@@ -14,7 +14,7 @@ from typing import Any, Dict, List
 import smtplib
 from email.mime.text import MIMEText
 
-from common.models.messages import UserInput, UserMetadata, FormattedOutput, ChatMessage
+from common.models.messages import UserInput, UserMetadata, FormattedOutput, ChatMessage, FileInfo
 from core.memory.module import MemoryModule
 from core.reasoning.module import ReasoningModule
 from core.perception.module import PerceptionModule
@@ -168,15 +168,21 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
             for file in uploaded_files:
                 # Save the file temporarily
                 file_path = f"temp_{file.name}"
-                with open(file_path, "wb") as f:
+                with open(file_path, "wb") as f:  # save the upload
                     f.write(file.getbuffer())
 
+                with open(file_path, "r", encoding="utf-8") as f:  # load it back as text
+                    markdown_text = f.read()
+
+                fileInfo = FileInfo(
+                    filename=file.name,
+                    size=file.size,
+                    file_path=file_path,
+                    file_content=markdown_text
+                )
+
                 # Add to files list
-                files.append({
-                    "path": file_path,
-                    "name": file.name,
-                    "type": file.type
-                })
+                files.append(fileInfo)
 
         # Construct user input object
         user_input = UserInput(
@@ -194,9 +200,9 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
             valid_result, perception_cost = await perception_module.validate_input(user_input)
 
             # Update input cost
-            st.session_state.last_response_costs["input_cost"] = perception_cost.get('input_cost')
-            st.session_state.last_response_costs["output_cost"] = perception_cost.get("output_cost")
-            st.session_state.last_response_costs["total_cost"] = perception_cost.get("total_cost")
+            st.session_state.last_response_costs["input_cost"] = perception_cost.get('input_cost', 0.0)
+            st.session_state.last_response_costs["output_cost"] = perception_cost.get("output_cost", 0.0)
+            st.session_state.last_response_costs["total_cost"] = perception_cost.get("total_cost", 0.0)
 
         # If not valid, return formatted error message
         if not valid_result.is_valid:
@@ -222,7 +228,7 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
         # Generate a workflow and prepare parameters with progress indicator
         with st.spinner("Generating and preparing workflow..."):
             workflow_definition, param_result, reasoning_cost = await reasoning_module.analyze_request_and_build_workflow(
-                user_input_text, agents_registry, chat_history
+                user_input, agents_registry, chat_history
             )
 
             # Update reasoning cost
@@ -257,8 +263,8 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
 
         # Clean up temporary files
         for file_info in files:
-            if os.path.exists(file_info["path"]):
-                os.remove(file_info["path"])
+            if os.path.exists(file_info.file_path):
+                os.remove(file_info.file_path)
 
         # On success, return the result
         output, output_cost = await perception_module.format_output(final_result, user_input_text)
@@ -578,12 +584,10 @@ else:
                 if data_md is not None:
                     st.markdown("---")
                     st.markdown("### Result Preview (You can download the complete dataset below.)")
-
-                    if data_md is not None:
-                        st.dataframe(data_md, use_container_width=True)
-                    else:
-                        # If not parsable, just render markdown
-                        st.markdown(data_md, unsafe_allow_html=True)
+                    st.dataframe(data_md, use_container_width=True)
+                else:
+                    # If not parsable, just render markdown
+                    st.markdown(data_md, unsafe_allow_html=True)
 
             # Update full assistant message to chat history
             st.session_state.messages.append({
