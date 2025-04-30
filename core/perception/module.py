@@ -237,13 +237,18 @@ class PerceptionModule:
             OutputFormattingError: If formatting fails or format is not supported
         """
         logger.info("Formatting output")
+        content = {
+            "opener": "",
+            "data": None,
+        }
         try:
             opener, cost = await self.get_gpt_response(result, user_input_text)
-            content = opener
+            content["opener"] = opener
 
             if not isinstance(result, PRIMITIVES):
-                table = result.value.to_markdown(index=False)
-                content = f"{opener}\n\n{table}"
+                # convert the data frame to JSON
+                content["data"] = result.value
+                logger.info(f"type of data: {type(content['data'])}")
 
             return FormattedOutput(type="data", content=content, format="json"), cost
 

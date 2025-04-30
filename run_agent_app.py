@@ -1,5 +1,9 @@
 import base64
 import time
+from datetime import datetime
+from io import StringIO, BytesIO
+
+import pandas as pd
 import streamlit as st
 import json
 import os
@@ -16,7 +20,6 @@ from core.reasoning.module import ReasoningModule
 from core.perception.module import PerceptionModule
 from core.action.module import ActionModule
 from common.utils.logging import setup_logger
-
 
 # Set up logger
 logger = setup_logger(__name__)
@@ -256,7 +259,6 @@ async def process_user_input(user_input_text: str, uploaded_files=None) -> Any:
         for file_info in files:
             if os.path.exists(file_info["path"]):
                 os.remove(file_info["path"])
-
 
         # On success, return the result
         output, output_cost = await perception_module.format_output(final_result, user_input_text)
@@ -532,17 +534,9 @@ else:
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
-
-                # Display costs for assistant messages if they have costs
-                if message["role"] == "assistant" and "cost" in message:
-                    st.markdown("---")
-                    st.markdown(f"""
-                    | LLM Cost Type | Amount |
-                    | --- | --- |
-                    | Input Cost | ${message['cost']['input_cost']:.4f} |
-                    | Output Cost | ${message['cost']['output_cost']:.4f} |
-                    | Total Cost | ${message['cost']['total_cost']:.4f} |
-                    """)
+                data = message.get("data")
+                if data is not None and isinstance(data, pd.DataFrame):
+                    st.dataframe(data, use_container_width=True)
 
         # File uploader
         uploaded_files = st.file_uploader("Upload files (optional)", accept_multiple_files=True)
@@ -556,10 +550,9 @@ else:
             with st.chat_message("user"):
                 st.markdown(prompt)
 
-            # Process the input and get response
+            # Display assistant message container
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
-                message_placeholder.markdown("Processing your request...")
 
                 # Reset last response costs
                 st.session_state.last_response_costs = {
@@ -568,41 +561,36 @@ else:
                     "total_cost": 0.0
                 }
 
-                # Process user input
+                # Process user input and get response
                 response = run_async(process_user_input(prompt, uploaded_files))
+                opener = response.get("opener", "")
+                data_md = response.get("data")
 
-                # Display the response with a typing effect
-                full_response = ""
-                response_text = str(response)
+                # Typing effect for opener
+                full_opener = ""
+                for i in range(0, len(opener), 5):
+                    full_opener += opener[i:i + 5]
+                    message_placeholder.markdown(full_opener + "▌")
+                    time.sleep(0.01)
+                message_placeholder.markdown(full_opener)
 
-                # Create a typing effect
-                for i in range(0, len(response_text), 5):
-                    chunk = response_text[i:i + 5]
-                    full_response += chunk
-                    message_placeholder.markdown(full_response + "▌")
-                    time.sleep(0.01)  # A faster typing effect for longer responses
+                # After opener, show result data
+                if data_md is not None:
+                    st.markdown("---")
+                    st.markdown("### Result Preview (You can download the complete dataset below.)")
 
-                message_placeholder.markdown(full_response)
+                    if data_md is not None:
+                        st.dataframe(data_md, use_container_width=True)
+                    else:
+                        # If not parsable, just render markdown
+                        st.markdown(data_md, unsafe_allow_html=True)
 
-                # Display cost information
-                st.markdown("---")
-                st.markdown(f"""
-                | Cost Type | Amount |
-                | --- | --- |
-                | Input Cost | ${st.session_state.last_response_costs['input_cost']:.4f} |
-                | Output Cost | ${st.session_state.last_response_costs['output_cost']:.4f} |
-                | Total Cost | ${st.session_state.last_response_costs['total_cost']:.4f} |
-                """)
-
-            # Add assistant response to chat history with cost info
+            # Update full assistant message to chat history
             st.session_state.messages.append({
                 "role": "assistant",
-                "content": response_text,
-                "cost": {
-                    "input_cost": st.session_state.last_response_costs['input_cost'],
-                    "output_cost": st.session_state.last_response_costs['output_cost'],
-                    "total_cost": st.session_state.last_response_costs['total_cost']
-                }
+                "content": opener + "\n\n",
+                "data": data_md if data_md is not None else "",
+                "cost": st.session_state.last_response_costs.copy()
             })
 
             st.rerun()
