@@ -21,8 +21,9 @@ class SecurityIssue(BaseModel):
 
 class FileInfo(BaseModel):
     filename: str
-    content_type: str
+    file_path: str
     size: int
+    file_content: Any
 
 
 class UserMetadata(BaseModel):
