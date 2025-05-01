@@ -18,22 +18,55 @@
 
 Agentfy supports **multi-agent communication and collaboration**, allowing sub-agents to reason, perceive, and act together in real-time. It dynamically selects and routes requests to the most suitable agents and functions — no manual configuration needed.
 
-<p align="center">
-  <img src="images/agentfy_flow.png" alt="flow" width="800" height="600">
-</p>
-
 ### 🧩 Agentfy Capabilities Table
 
-| **Feature** | **Description** | **Example Prompt** |
-|-------------|------------------|---------------------|
-| 🎯 **Buyer Targeting & Outreach** | Smartly identify potential buyers and initiate personalized interactions across TikTok, Instagram, and more. | *"Find me some customers on Instagram and TikTok who are interested in buying a kitchen knife set and DM them my shop's new product: ___."* |
-| 📢 **Cross-Platform Promotions** | Launch cross-platform promotions, generate ad content, and reach high-intent audiences at scale. | *"I'm hosting a hackathon at USC Viterbi. Here's my event info: ___. Can you send it to people on X and Instagram who may be interested, and also generate and post promo content across my accounts?"* |
+| **Feature** |**Example Prompt** |
+|-------------|---------------------|
+| 🎯 **Buyer Targeting & Outreach** | *"Find me some customers on Instagram and TikTok who are interested in buying a kitchen knife set and DM them my shop's new product: ___."* |
+| 📢 **Cross-Platform Promotions** |*"I'm hosting a hackathon at USC Viterbi. Here's my event info: ___. Can you send it to people on X and Instagram who may be interested, and also generate and post promo content across my accounts?"* |
 | 📝 **Content Transformation & Posting** | Transform ideas, videos, or trends into tailored posts, captions, and media across self-authorized accounts. | *“Here’s my new unboxing video. Add subtitles, generate platform-optimized captions, and post to YouTube Shorts, Instagram Reels, and TikTok. Tag relevant hashtags and track early performance.”* |
-| 🤖 **Automated Messaging & Support** | Reply to DMs, translate messages, and build 24/7 support flows in the customer's language. | *“Add a background task for me that automatically replies to customer DMs on TikTok and Instagram (make sure it's in the customer's language).”* |
-| 🧠 **Creator Discovery & Competitor Monitoring** | Discover creators to partner with and monitor rival strategies across key platforms. | *“Find 50 livestreamers or influencers on Instagram and TikTok who would be a good fit to advertise my pillow set, send them a campaign brief.”* |
+| 🤖 **Automated Messaging & Support** |*“Add a background task for me that automatically replies to customer DMs on TikTok and Instagram (make sure it's in the customer's language).”* |
+| 🧠 **Creator Discovery & Competitor Monitoring** |*“Find 50 livestreamers or influencers on Instagram and TikTok who would be a good fit to advertise my pillow set, send them a campaign brief.”* |
 
 
 > **⚠️ Notes: Agentfy will integrating deeply with platforms like TikTok, Instagram, YouTube, X, Quora, WhatsApp, and more — ready to power the future of digital ops.**
+
+---
+
+## 🎬 Quick Demos
+
+<div align="center">
+
+<p><b>▶️ 1️⃣ Cross-platform buyer discovery</b></p>
+<a href="https://www.youtube.com/watch?v=Cnwddd6eOyo" target="_blank">
+  <img 
+    src="https://img.youtube.com/vi/FRZknv5rF_I/maxresdefault.jpg" 
+    alt="Demo 1 - Cross-platform buyer discovery" 
+    width="480" 
+    style="border-radius:12px; display:block; margin:auto; box-shadow: 0 0 10px rgba(0,0,0,0.15);" />
+</a>
+
+<p><b>▶️ 2️⃣ Generation & posting with attachments</b></p>
+<a href="https://www.youtube.com/watch?v=SUO4BpvIOco" target="_blank">
+  <img 
+    src="https://img.youtube.com/vi/SUO4BpvIOco/maxresdefault.jpg" 
+    alt="Demo 2 - Generation & posting with attachments" 
+    width="480" 
+    style="border-radius:12px; display:block; margin:auto; box-shadow: 0 0 10px rgba(0,0,0,0.15);" />
+</a>
+
+<p><b>▶️ 3️⃣ Video performance & audience portrait</b></p>
+<a href="https://www.youtube.com/watch?v=Cnwddd6eOyo" target="_blank">
+  <img 
+    src="https://img.youtube.com/vi/Cnwddd6eOyo/maxresdefault.jpg" 
+    alt="Demo 3 - Video performance & audience portrait" 
+    width="480" 
+    style="border-radius:12px; display:block; margin:auto; box-shadow: 0 0 10px rgba(0,0,0,0.15);" />
+</a>
+
+</div>
+
+---
 
 ## 🚦 Getting Started
 
@@ -58,7 +91,7 @@ Agentfy supports **multi-agent communication and collaboration**, allowing sub-a
 
 ## 🚀 Running the Program
 
-You can interact with the program in three different ways:
+You can interact with the program in two different ways:
 
 ### 1. Command Line Interface (CLI)
 ```bash
@@ -74,17 +107,6 @@ streamlit run run_agent_app.py
 - Runs the program with a Streamlit web interface
 - Access the interface at `http://localhost:8501`
 - User-friendly graphical interface
-
-### 3. FastAPI Web Interface (Currently Unavailable, Do Not Use!!)
-```bash
-python run_agent_api.py
-```
-- Runs the program as a FastAPI server
-- Access the web interface at `http://localhost:8000`
-- RESTful API for programmatic access
-
-> ⚠️ Note: The system is actively being improved. The author is currently adding more sub-agents and enhancing the overall accuracy and performance. Expect frequent updates and refinements.
-
 
 ## ➕ If You Need to Add New Sub Agents....
 

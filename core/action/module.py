@@ -6,13 +6,10 @@
 """
 import importlib
 import inspect
-import asyncio
 import json
 import os
 from typing import Any, Dict, List, Optional, Union, Tuple, AsyncGenerator
 from datetime import datetime
-
-from pyasn1.type.univ import Boolean
 
 from common.exceptions.exceptions import WorkflowExecutionError, StepExecutionError
 from common.models.workflows import (
@@ -26,30 +23,26 @@ logger = setup_logger(__name__)
 
 
 class ActionModule:
-    """
-    Simplified Action Module that executes workflows by finding and calling agent functions,
-    with proper parameter handling and step-to-step data flow.
-    """
 
-    def __init__(self):
+    def __init__(self, api_keys: Optional[Dict[str, str]] = None):
         """Initialize the action module."""
         self.active_workflows = {}
+        self.tikhub_api_key = api_keys.get("tikhub") if api_keys else None
 
-        # load agen_registry json from agents.agent_registry route
-        # self.agent_registry = self.load_agent_registry()
 
-    # Load agent registry
-    async def get_agent_registry(self):
+    @staticmethod
+    async def get_agent_registry():
         registry_path = os.getenv("AGENT_REGISTRY_PATH", "agents_registry.json")
         try:
             with open(registry_path, "r") as f:
                 return json.load(f)
         except FileNotFoundError:
-            print(f"Registry file not found at {registry_path}")
+            logger.error(f"Registry file not found at {registry_path}")
             return {}
         except json.JSONDecodeError:
-            print(f"Invalid JSON in registry file at {registry_path}")
+            logger.error(f"Invalid JSON in registry file at {registry_path}")
             return {}
+
 
     async def execute_workflow(self, workflow: WorkflowDefinition,
                                param_validation: ParameterValidationResult) ->  AsyncGenerator[ExecutionResult, None]:
@@ -126,7 +119,7 @@ class ActionModule:
             for step_index, step in enumerate(workflow.steps):
                 step_id = step.step_id
                 step_start_time = datetime.utcnow()
-                logger.info(f"➡️ Executing step **{step_index + 1} / {len(workflow.steps)}**: `{step.function_id}`...")
+                logger.info(f" Executing step **{step_index + 1} / {len(workflow.steps)}**: `{step.function_id}`...")
 
                 yield ExecutionResult(
                     workflow_id=workflow_id,
@@ -192,7 +185,7 @@ class ActionModule:
                     # Create error
                     error = ExecutionError(
                         error_code="STEP_EXECUTION_ERROR",
-                        message=f"Error executing step {step_id}: {str(e)}",
+                        message=f"Error executing {step_id}: {str(e)}",
                         step_id=step_id,
                         timestamp=datetime.utcnow(),
                         recoverable=False,
@@ -279,20 +272,25 @@ class ActionModule:
         if not params:  # No parameters defined for this step
             return {}
 
-        # if step_index == 0, check if all required parameters are provided
-        if step_index == 0:
-            if any(not info["value"] and info["is_required"] for info in params.values()):
-                return {}
-            return {name: info["value"] for name, info in params.items()}
-
-        # if step_index > 0, check if previous step output can be found in params
         has_match = False
         result = {}
+
+        # if step_index == 0, check if all required parameters are provided
+        if step_index == 0:
+            for name, info in params.items():
+                if info["is_required"] and not info["value"]:
+                    logger.warning(f"Missing required parameter: {info['name']}")
+                    return {}
+                if info["is_required"] and info["value"]:
+                    result[name] = info["value"]
+            return result
+
+        # if step_index > 0, check if previous step output can be found in params
 
         for name, info in params.items():
             param_type = info.get("type")
             prev_output = context.get("previous_step_output")
-            # logger.info(f"Preparing parameter: {name} with type: {param_type}, value: {info['value']}, previous output type: {type(prev_output)}")
+            # logger.info(f"Preparing parameter [{name}] with type [{param_type}], value: {info['value']}")
 
             if param_type and param_type == str(type(prev_output)):
                 has_match = True
@@ -321,6 +319,7 @@ class ActionModule:
         Args:
             step: The step to execute
             parameters: Parameters for the step
+            tikhub_api_key: TikHub API key for authentication
 
         Returns:
             Any: Step execution result
@@ -332,15 +331,16 @@ class ActionModule:
             agent_id = step.agent_id
             function_id = step.function_id
 
-            logger.info(f"Executing function: {agent_id}.{function_id}")
-
-            # Find and load the agent module
             try:
                 # Dynamic import based on agent ID
                 # Format: platform_category (e.g., tiktok_crawler, twitter_analysis)
                 platform, category = agent_id.split("_")
                 module_path = f"agents.{platform}.{category}"
                 agent_module = importlib.import_module(module_path, package=__name__)
+
+                if category == 'crawler':
+                    # For crawler agents, use the TikHub API key
+                    setattr(agent_module, "TIKHUB_API_KEY", self.tikhub_api_key)
 
                 # Find the function
                 if not hasattr(agent_module, function_id):
@@ -354,9 +354,6 @@ class ActionModule:
                     result = await function(**args)
                 else:
                     result = function(**args)
-
-                logger.info(f"Function {function_id} executed successfully")
-
                 return result
 
             except ImportError as e:

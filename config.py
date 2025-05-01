@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     tikhub_api_key: Optional[str] = Field(None, env="TIKHUB_API_KEY")
     lemonfox_api_key: Optional[str] = Field(None, env="LEMONFOX_API_KEY")
     elevenlabs_api_key: Optional[str] = Field(None, env="ELEVENLABS_API_KEY")
+    pandas_ai_api_key: Optional[str] = Field(None, env="PANDAS_AI_API_KEY")
 
     # social media API keys
     x_api_key: Optional[str] = Field(None, env="X_API_KEY")
@@ -39,6 +40,7 @@ class Settings(BaseSettings):
     youtube_api_key: Optional[str] = Field(None, env="YOUTUBE_API_KEY")
     youtube_client_id: Optional[str] = Field(None, env="YOUTUBE_CLIENT_ID")
     youtube_client_secret: Optional[str] = Field(None, env="YOUTUBE_CLIENT_SECRET")
+
 
     # TikHub data source
     tikhub_base_url: str = "https://api.tikhub.io"

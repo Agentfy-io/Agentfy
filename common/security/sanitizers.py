@@ -100,7 +100,7 @@ class FileValidator:
     # Allowed file extensions by category
     ALLOWED_EXTENSIONS = {
         "image": [".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp"],
-        "document": [".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx", ".csv"],
+        "document": [".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".md"],
         "media": [".mp4", ".mp3", ".avi", ".mov", ".wav"],
         "archive": [".zip", ".rar", ".7z"],
     }

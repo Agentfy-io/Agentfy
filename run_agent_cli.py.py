@@ -10,6 +10,9 @@ from core.reasoning.module import ReasoningModule
 from core.perception.module import PerceptionModule
 from core.action.module import ActionModule
 from common.utils.logging import setup_logger
+import sys
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 # Set up logger
 logger = setup_logger(__name__)
