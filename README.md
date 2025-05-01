@@ -37,14 +37,34 @@ Agentfy supports **multi-agent communication and collaboration**, allowing sub-a
 
 <div align="center">
 
-| Demo                                      | Clip                                                                                              |
-|-------------------------------------------|---------------------------------------------------------------------------------------------------|
-| 1️⃣ Cross-platform buyer discovery        | [![Demo 1](https://img.youtube.com/vi/FRZknv5rF_I/0.jpg)](https://youtu.be/FRZknv5rF_I)           |
-| 2️⃣ Generation & posting with attachments | [![Demo 2](https://img.youtube.com/vi/SUO4BpvIOco/0.jpg)](https://youtu.be/SUO4BpvIOco)           |
-| 3️⃣ Video performance & audience portrait | [![Demo 3](https://img.youtube.com/vi/Cnwddd6eOyo/0.jpg)](https://youtu.be/Cnwddd6eOyo)           |
+<p><b>▶️ 1️⃣ Cross-platform buyer discovery</b></p>
+<a href="https://youtu.be/FRZknv5rF_I" target="_blank">
+  <img 
+    src="https://img.youtube.com/vi/FRZknv5rF_I/maxresdefault.jpg" 
+    alt="Demo 1 - Cross-platform buyer discovery" 
+    width="480" 
+    style="border-radius:12px; display:block; margin:auto; box-shadow: 0 0 10px rgba(0,0,0,0.15);" />
+</a>
+
+<p><b>▶️ 2️⃣ Generation & posting with attachments</b></p>
+<a href="https://youtu.be/SUO4BpvIOco" target="_blank">
+  <img 
+    src="https://img.youtube.com/vi/SUO4BpvIOco/maxresdefault.jpg" 
+    alt="Demo 2 - Generation & posting with attachments" 
+    width="480" 
+    style="border-radius:12px; display:block; margin:auto; box-shadow: 0 0 10px rgba(0,0,0,0.15);" />
+</a>
+
+<p><b>▶️ 3️⃣ Video performance & audience portrait</b></p>
+<a href="https://youtu.be/Cnwddd6eOyo" target="_blank">
+  <img 
+    src="https://img.youtube.com/vi/Cnwddd6eOyo/maxresdefault.jpg" 
+    alt="Demo 3 - Video performance & audience portrait" 
+    width="480" 
+    style="border-radius:12px; display:block; margin:auto; box-shadow: 0 0 10px rgba(0,0,0,0.15);" />
+</a>
 
 </div>
-
 
 ---
 
