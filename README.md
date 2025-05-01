@@ -20,13 +20,13 @@ Agentfy supports **multi-agent communication and collaboration**, allowing sub-a
 
 ### 🧩 Agentfy Capabilities Table
 
-| **Feature** | **Description** | **Example Prompt** |
-|-------------|------------------|---------------------|
-| 🎯 **Buyer Targeting & Outreach** | Smartly identify potential buyers and initiate personalized interactions across TikTok, Instagram, and more. | *"Find me some customers on Instagram and TikTok who are interested in buying a kitchen knife set and DM them my shop's new product: ___."* |
-| 📢 **Cross-Platform Promotions** | Launch cross-platform promotions, generate ad content, and reach high-intent audiences at scale. | *"I'm hosting a hackathon at USC Viterbi. Here's my event info: ___. Can you send it to people on X and Instagram who may be interested, and also generate and post promo content across my accounts?"* |
+| **Feature** |**Example Prompt** |
+|-------------|---------------------|
+| 🎯 **Buyer Targeting & Outreach** | *"Find me some customers on Instagram and TikTok who are interested in buying a kitchen knife set and DM them my shop's new product: ___."* |
+| 📢 **Cross-Platform Promotions** |*"I'm hosting a hackathon at USC Viterbi. Here's my event info: ___. Can you send it to people on X and Instagram who may be interested, and also generate and post promo content across my accounts?"* |
 | 📝 **Content Transformation & Posting** | Transform ideas, videos, or trends into tailored posts, captions, and media across self-authorized accounts. | *“Here’s my new unboxing video. Add subtitles, generate platform-optimized captions, and post to YouTube Shorts, Instagram Reels, and TikTok. Tag relevant hashtags and track early performance.”* |
-| 🤖 **Automated Messaging & Support** | Reply to DMs, translate messages, and build 24/7 support flows in the customer's language. | *“Add a background task for me that automatically replies to customer DMs on TikTok and Instagram (make sure it's in the customer's language).”* |
-| 🧠 **Creator Discovery & Competitor Monitoring** | Discover creators to partner with and monitor rival strategies across key platforms. | *“Find 50 livestreamers or influencers on Instagram and TikTok who would be a good fit to advertise my pillow set, send them a campaign brief.”* |
+| 🤖 **Automated Messaging & Support** |*“Add a background task for me that automatically replies to customer DMs on TikTok and Instagram (make sure it's in the customer's language).”* |
+| 🧠 **Creator Discovery & Competitor Monitoring** |*“Find 50 livestreamers or influencers on Instagram and TikTok who would be a good fit to advertise my pillow set, send them a campaign brief.”* |
 
 
 > **⚠️ Notes: Agentfy will integrating deeply with platforms like TikTok, Instagram, YouTube, X, Quora, WhatsApp, and more — ready to power the future of digital ops.**
@@ -37,11 +37,11 @@ Agentfy supports **multi-agent communication and collaboration**, allowing sub-a
 
 <div align="center">
 
-| Demo                                      | Clip                                                                                      |
-|-------------------------------------------|-------------------------------------------------------------------------------------------|
-| 1️⃣ Cross-platform buyer discovery        | <video src="demo1.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
-| 2️⃣ Generation & posting with attachments | <video src="demo2.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
-| 3️⃣ Video performance & audience portrait | <video src="demo3.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
+| Demo                                      | Clip                                                                                            |
+|-------------------------------------------|-------------------------------------------------------------------------------------------------|
+| 1️⃣ Cross-platform buyer discovery        | <video src="demos/demo1.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
+| 2️⃣ Generation & posting with attachments | <video src="demos/demo2.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
+| 3️⃣ Video performance & audience portrait | <video src="demos/demo3.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
 
 </div>
 
