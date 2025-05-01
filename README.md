@@ -18,10 +18,6 @@
 
 Agentfy supports **multi-agent communication and collaboration**, allowing sub-agents to reason, perceive, and act together in real-time. It dynamically selects and routes requests to the most suitable agents and functions — no manual configuration needed.
 
-<p align="center">
-  <img src="images/agentfy_flow.png" alt="flow" width="800" height="600">
-</p>
-
 ### 🧩 Agentfy Capabilities Table
 
 | **Feature** | **Description** | **Example Prompt** |
@@ -34,6 +30,22 @@ Agentfy supports **multi-agent communication and collaboration**, allowing sub-a
 
 
 > **⚠️ Notes: Agentfy will integrating deeply with platforms like TikTok, Instagram, YouTube, X, Quora, WhatsApp, and more — ready to power the future of digital ops.**
+
+---
+
+## 🎬 Quick Demos
+
+<div align="center">
+
+| Demo                                      | Clip                                                                                      |
+|-------------------------------------------|-------------------------------------------------------------------------------------------|
+| 1️⃣ Cross-platform buyer discovery        | <video src="demo1.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
+| 2️⃣ Generation & posting with attachments | <video src="demo2.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
+| 3️⃣ Video performance & audience portrait | <video src="demo3.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
+
+</div>
+
+---
 
 ## 🚦 Getting Started
 
@@ -58,7 +70,7 @@ Agentfy supports **multi-agent communication and collaboration**, allowing sub-a
 
 ## 🚀 Running the Program
 
-You can interact with the program in three different ways:
+You can interact with the program in two different ways:
 
 ### 1. Command Line Interface (CLI)
 ```bash
@@ -74,17 +86,6 @@ streamlit run run_agent_app.py
 - Runs the program with a Streamlit web interface
 - Access the interface at `http://localhost:8501`
 - User-friendly graphical interface
-
-### 3. FastAPI Web Interface (Currently Unavailable, Do Not Use!!)
-```bash
-python run_agent_api.py
-```
-- Runs the program as a FastAPI server
-- Access the web interface at `http://localhost:8000`
-- RESTful API for programmatic access
-
-> ⚠️ Note: The system is actively being improved. The author is currently adding more sub-agents and enhancing the overall accuracy and performance. Expect frequent updates and refinements.
-
 
 ## ➕ If You Need to Add New Sub Agents....
 
