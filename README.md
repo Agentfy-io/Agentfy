@@ -37,13 +37,14 @@ Agentfy supports **multi-agent communication and collaboration**, allowing sub-a
 
 <div align="center">
 
-| Demo                                      | Clip                                                                                            |
-|-------------------------------------------|-------------------------------------------------------------------------------------------------|
-| 1️⃣ Cross-platform buyer discovery        | <video src="demos/demo1.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
-| 2️⃣ Generation & posting with attachments | <video src="demos/demo2.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
-| 3️⃣ Video performance & audience portrait | <video src="demos/demo3.mp4" controls width="240" style="display:block;margin:0 auto;"></video> |
+| Demo                                      | Clip                                                                                              |
+|-------------------------------------------|---------------------------------------------------------------------------------------------------|
+| 1️⃣ Cross-platform buyer discovery        | [![Demo 1](https://img.youtube.com/vi/FRZknv5rF_I/0.jpg)](https://youtu.be/FRZknv5rF_I)           |
+| 2️⃣ Generation & posting with attachments | [![Demo 2](https://img.youtube.com/vi/SUO4BpvIOco/0.jpg)](https://youtu.be/SUO4BpvIOco)           |
+| 3️⃣ Video performance & audience portrait | [![Demo 3](https://img.youtube.com/vi/Cnwddd6eOyo/0.jpg)](https://youtu.be/Cnwddd6eOyo)           |
 
 </div>
+
 
 ---
 
