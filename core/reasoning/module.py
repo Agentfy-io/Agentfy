@@ -30,7 +30,7 @@ class ReasoningModule:
     def __init__(self, api_keys: Optional[Dict[str, str]] = None):
         """Initialize the reasoning module with configuration."""
         self.config = settings
-        self.chatgpt = ChatGPT(openai_api_key=api_keys['openai'])
+        self.chatgpt = ChatGPT()
 
 
     async def analyze_request_and_build_workflow(self,
@@ -131,6 +131,8 @@ class ReasoningModule:
         workflow = result['response']["choices"][0]["message"]["content"].strip()
         workflow = re.sub(r"^```(?:json)?\s*", "", workflow)
         workflow = re.sub(r"\s*```$", "", workflow)
+        workflow = re.sub(r'(?<!:)//.*', '', workflow)
+        workflow = re.sub(r'(".*?"\s*:\s*)None', r'\1null', workflow)
         workflow = json.loads(workflow)
         workflow['cost'] = result['cost']
 
@@ -164,6 +166,8 @@ class ReasoningModule:
         updated_workflow = result['response']["choices"][0]["message"]["content"]
         updated_workflow = re.sub(r"^```(?:json)?\s*", "", updated_workflow)
         updated_workflow = re.sub(r"\s*```$", "", updated_workflow)
+        updated_workflow = re.sub(r'(?<!:)//.*', '', updated_workflow)
+        updated_workflow = re.sub(r'(".*?"\s*:\s*)None', r'\1null', updated_workflow)
         updated_workflow = json.loads(updated_workflow)
         updated_workflow['cost'] = result['cost']
 

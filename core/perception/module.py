@@ -47,7 +47,7 @@ class PerceptionModule:
         self.security_validator = SecurityValidator()
         self.input_sanitizer = InputSanitizer()
         self.file_validator = FileValidator()
-        self.chatgpt = ChatGPT(openai_api_key=api_keys['openai'])
+        self.chatgpt = ChatGPT()
 
     async def clarify_user_request(self, user_request: str) -> Dict[str, Any]:
         """
