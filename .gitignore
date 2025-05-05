@@ -22,6 +22,8 @@
 /.idea
 /agents/instagram/__pycache__
 /agents/tiktok/__pycache__
+/venv
+/venv/*
 *.json
 *.log
 *.csv

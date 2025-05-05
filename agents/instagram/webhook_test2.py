@@ -91,7 +91,7 @@ async def execute_workflow_task(workflow: WorkflowDefinition, user_id: str, para
         print(f"Error executing workflow: {str(e)}")
         logging.error(f"Error in webhook_event:\n{traceback.format_exc()}")
 
-        # Add error to chat history
+        # Add errors to chat history
         chat_message = ChatMessage(
             sender="AGENT",
             content=f"Error executing workflow: {str(e)}",

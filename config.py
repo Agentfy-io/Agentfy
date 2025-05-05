@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     tikhub_api_key: Optional[str] = Field(None, env="TIKHUB_API_KEY")
     lemonfox_api_key: Optional[str] = Field(None, env="LEMONFOX_API_KEY")
     elevenlabs_api_key: Optional[str] = Field(None, env="ELEVENLABS_API_KEY")
+    # Add Pandas
     pandas_api_key: Optional[str] = Field(None, env="PANDAS_AI_API_KEY")
     pandas_ai_api_key: Optional[str] = Field(None, env="PANDAS_AI_API_KEY")
 
