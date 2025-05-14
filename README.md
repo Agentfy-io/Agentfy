@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/agentfy-io-agentfy-badge.png)](https://mseep.ai/app/agentfy-io-agentfy)
+
 <p align="center">
   <img src="images/agentfy_logo.png" alt="logo" width="300" height="170">
 </p>
