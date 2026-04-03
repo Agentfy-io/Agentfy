@@ -72,6 +72,10 @@ class ClaudeAPIError(ReasoningException):
     """Raised when Claude API call fails."""
     pass
 
+class MiniMaxAPIError(ReasoningException):
+    """Raised when MiniMax API call fails."""
+    pass
+
 # Action Module Exceptions
 class ActionException(SocialMediaAgentException):
     """Base exception for action module."""

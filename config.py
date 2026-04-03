@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     # External Service API Keys
     openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
     anthropic_api_key: Optional[str] = Field(None, env="ANTHROPIC_API_KEY")
+    minimax_api_key: Optional[str] = Field(None, env="MINIMAX_API_KEY")
     tikhub_api_key: Optional[str] = Field(None, env="TIKHUB_API_KEY")
     lemonfox_api_key: Optional[str] = Field(None, env="LEMONFOX_API_KEY")
     elevenlabs_api_key: Optional[str] = Field(None, env="ELEVENLABS_API_KEY")
