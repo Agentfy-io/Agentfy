@@ -25,3 +25,6 @@
 *.json
 *.log
 *.csv
+# pycache
+__pycache__/
+*.pyc
